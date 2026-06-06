@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendorBridge – Login & Register</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --vb-purple:  #6f42c1;
+      --vb-blue:    #0d6efd;
+      --vb-teal:    #20c997;
+      --vb-orange:  #fd7e14;
+      --vb-indigo:  #6610f2;
+      --vb-pink:    #d63384;
+      --vb-grad-main:   linear-gradient(135deg, var(--vb-purple) 0%, var(--vb-blue) 60%, var(--vb-teal) 100%);
+      --vb-grad-btn:    linear-gradient(45deg, var(--vb-purple), var(--vb-blue));
+      --vb-grad-btn-h:  linear-gradient(45deg, var(--vb-indigo), var(--vb-purple));
+      --vb-shadow:  0 8px 32px rgba(111,66,193,0.18);
+      --vb-shadow-lg: 0 20px 60px rgba(111,66,193,0.22);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f4f5fb;
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      overflow-x: hidden;
+    }
+
+    /* ─── Left panel ─────────────────────────────── */
+    .auth-left {
+      width: 48%;
+      background: var(--vb-grad-main);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 3.5rem;
+      overflow: hidden;
+    }
+
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      top: -100px; left: -100px;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      bottom: -60px; right: -60px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 2.8rem;
+      z-index: 1;
+    }
+    .brand-logo .logo-icon {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.35);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+    .brand-logo .logo-icon i { color: #fff; font-size: 1.5rem; }
+    .brand-logo .logo-text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 1.75rem;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .brand-logo .logo-text span { font-weight: 300; opacity: 0.85; }
+
+    .left-headline {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      text-align: center;
+      z-index: 1;
+      margin-bottom: 1rem;
+    }
+    .left-subtext {
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      font-size: 0.97rem;
+      line-height: 1.65;
+      z-index: 1;
+      max-width: 380px;
+    }
+
+    .feature-pills {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 2.5rem;
+      width: 100%;
+      max-width: 380px;
+      z-index: 1;
+    }
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 13px 18px;
+      backdrop-filter: blur(6px);
+      transition: all 0.3s;
+    }
+    .feature-pill:hover {
+      background: rgba(255,255,255,0.18);
+      transform: translateX(6px);
+    }
+    .feature-pill .pill-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-pill .pill-icon i { color: #fff; font-size: 0.9rem; }
+    .feature-pill .pill-text { color: rgba(255,255,255,0.92); font-size: 0.88rem; font-weight: 500; }
+
+    /* ─── Right panel ─────────────────────────────── */
+    .auth-right {
+      width: 52%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 3rem;
+      position: relative;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ─── Tab switcher ────────────────────────────── */
+    .auth-tabs {
+      display: flex;
+      background: #f4f5fb;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 2rem;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      border-radius: 9px;
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #9097a5;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .auth-tab.active {
+      background: var(--vb-grad-btn);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(111,66,193,0.3);
+    }
+
+    /* ─── Form panels ─────────────────────────────── */
+    .form-panel { display: none; }
+    .form-panel.active { display: block; animation: fadeInUp 0.35s ease; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      margin-bottom: 0.3rem;
+    }
+    .form-subtitle {
+      color: #8a909e;
+      font-size: 0.88rem;
+      margin-bottom: 1.8rem;
+    }
+
+    /* ─── Inputs ──────────────────────────────────── */
+    .field-group {
+      margin-bottom: 1.1rem;
+      position: relative;
+    }
+    .field-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4a5068;
+      margin-bottom: 6px;
+      display: block;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b0b7c8;
+      font-size: 0.88rem;
+      pointer-events: none;
+      transition: color 0.25s;
+    }
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d2e;
+      background: #fafbfe;
+      transition: all 0.25s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-wrap select { cursor: pointer; }
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: var(--vb-purple);
+      background: #fff;
+      box-shadow: 0 0 0 3.5px rgba(111,66,193,0.1);
+    }
+    .input-wrap input:focus + .field-icon,
+    .input-wrap:focus-within .field-icon {
+      color: var(--vb-purple);
+    }
+    .input-wrap .toggle-pw {
+      position: absolute;
+      right: 13px;
+      top: 50%; transform: translateY(-50%);
+      color: #b0b7c8;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.25s;
+    }
+    .input-wrap .toggle-pw:hover { color: var(--vb-purple); }
+
+    /* two-col grid */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ─── Role cards ──────────────────────────────── */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .role-card {
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: #fafbfe;
+    }
+    .role-card:hover { border-color: var(--vb-purple); background: rgba(111,66,193,0.04); }
+    .role-card.selected {
+      border-color: var(--vb-purple);
+      background: rgba(111,66,193,0.07);
+      box-shadow: 0 0 0 3px rgba(111,66,193,0.12);
+    }
+    .role-card i { font-size: 1.25rem; margin-bottom: 6px; display: block; }
+    .role-card .role-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #4a5068;
+    }
+    .role-card.selected .role-name { color: var(--vb-purple); }
+
+    /* role icon colors */
+    .role-card[data-role="procurement_officer"] i { color: var(--vb-blue); }
+    .role-card[data-role="vendor"] i              { color: var(--vb-teal); }
+    .role-card[data-role="manager"] i             { color: var(--vb-orange); }
+    .role-card[data-role="admin"] i               { color: var(--vb-purple); }
+
+    /* ─── Password strength ───────────────────────── */
+    .pw-strength { margin-top: 6px; }
+    .pw-bars { display: flex; gap: 5px; margin-bottom: 4px; }
+    .pw-bar {
+      flex: 1; height: 4px; border-radius: 3px;
+      background: #e3e6ef; transition: background 0.35s;
+    }
+    .pw-bar.weak   { background: #ef4444; }
+    .pw-bar.fair   { background: var(--vb-orange); }
+    .pw-bar.good   { background: var(--vb-teal); }
+    .pw-bar.strong { background: #22c55e; }
+    .pw-label { font-size: 0.75rem; color: #8a909e; }
+
+    /* ─── Buttons ─────────────────────────────────── */
+    .btn-vb-primary {
+      display: block; width: 100%;
+      padding: 13px;
+      background: var(--vb-grad-btn);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.97rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 18px rgba(111,66,193,0.3);
+      letter-spacing: 0.2px;
+    }
+    .btn-vb-primary:hover {
+      background: var(--vb-grad-btn-h);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(111,66,193,0.4);
+    }
+    .btn-vb-primary:active { transform: translateY(0); }
+    .btn-vb-primary.loading {
+      pointer-events: none; opacity: 0.8;
+    }
+
+    /* ─── Divider ─────────────────────────────────── */
+    .or-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 1.2rem 0;
+      color: #c4c9d6; font-size: 0.8rem;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: #e8eaf0;
+    }
+
+    /* ─── OAuth btns ──────────────────────────────── */
+    .oauth-btns { display: flex; gap: 10px; margin-bottom: 1.4rem; }
+    .btn-oauth {
+      flex: 1; padding: 10px;
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 0.84rem; font-weight: 600;
+      color: #4a5068; cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-oauth:hover { border-color: var(--vb-purple); background: rgba(111,66,193,0.04); transform: translateY(-1px); }
+    .btn-oauth img { width: 18px; height: 18px; }
+
+    /* ─── Agree checkbox ──────────────────────────── */
+    .agree-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .agree-row input[type="checkbox"] { margin-top: 2px; accent-color: var(--vb-purple); }
+    .agree-row label { font-size: 0.8rem; color: #7a8196; line-height: 1.5; }
+    .agree-row a { color: var(--vb-purple); text-decoration: none; font-weight: 600; }
+    .agree-row a:hover { text-decoration: underline; }
+
+    /* ─── Forgot link ─────────────────────────────── */
+    .forgot-row {
+      display: flex; justify-content: flex-end;
+      margin-bottom: 1.2rem;
+    }
+    .forgot-row a {
+      font-size: 0.82rem; color: var(--vb-purple); font-weight: 600;
+      text-decoration: none;
+    }
+    .forgot-row a:hover { text-decoration: underline; }
+
+    /* ─── Alert messages ──────────────────────────── */
+    .vb-alert {
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 0.84rem;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 10px;
+      animation: fadeInUp 0.3s ease;
+    }
+    .vb-alert.success { background: #ecfdf5; color: #166534; border: 1px solid #bbf7d0; }
+    .vb-alert.error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .vb-alert.info    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* ─── Footer note ─────────────────────────────── */
+    .switch-note {
+      text-align: center; margin-top: 1.5rem;
+      font-size: 0.85rem; color: #8a909e;
+    }
+    .switch-note a { color: var(--vb-purple); font-weight: 700; text-decoration: none; cursor: pointer; }
+    .switch-note a:hover { text-decoration: underline; }
+
+    /* ─── Forgot password overlay ─────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,15,30,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; animation: fadeInUp 0.3s ease; }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 2.2rem 2rem;
+      width: 92%; max-width: 420px;
+      box-shadow: var(--vb-shadow-lg);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 18px;
+      background: none; border: none; font-size: 1.1rem;
+      color: #9097a5; cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--vb-purple); }
+
+    /* ─── Progress stepper (register) ────────────────── */
+    .step-indicator {
+      display: flex; align-items: center;
+      gap: 0; margin-bottom: 1.8rem;
+    }
+    .step-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #e8eaf0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+      color: #9097a5;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.35s;
+      flex-shrink: 0;
+    }
+    .step-dot.active { background: var(--vb-grad-btn); color: #fff; box-shadow: 0 3px 12px rgba(111,66,193,0.35); }
+    .step-dot.done   { background: var(--vb-teal); color: #fff; }
+    .step-line {
+      flex: 1; height: 3px;
+      background: #e8eaf0; border-radius: 2px;
+      transition: background 0.4s;
+    }
+    .step-line.done { background: var(--vb-teal); }
+
+    .step-page { display: none; }
+    .step-page.active { display: block; animation: fadeInUp 0.3s ease; }
+
+    /* ─── Photo upload ────────────────────────────── */
+    .photo-upload-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1.6rem;
+    }
+    .photo-ring {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(111,66,193,0.12), rgba(13,110,253,0.12));
+      border: 2.5px dashed #c4bde8;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+    .photo-ring:hover {
+      border-color: var(--vb-purple);
+      background: rgba(111,66,193,0.08);
+      transform: scale(1.04);
+    }
+    .photo-ring img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+    .photo-ring .photo-placeholder { text-align: center; }
+    .photo-ring .photo-placeholder i { color: #a89dd4; font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .photo-ring .photo-placeholder span { font-size: 0.68rem; color: #b0b7c8; font-weight: 500; }
+    .photo-ring input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .photo-badge {
+      width: 26px; height: 26px;
+      background: var(--vb-grad-btn);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      position: absolute; bottom: 2px; right: 2px;
+      border: 2px solid #fff;
+      pointer-events: none;
+    }
+    .photo-badge i { color: #fff; font-size: 0.62rem; }
+    .photo-upload-label {
+      margin-top: 8px;
+      font-size: 0.78rem; color: #9097a5; font-weight: 500;
+    }
+
+    /* login avatar (fixed, no upload — shows initials after login attempt) */
+    .login-avatar-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 1.4rem;
+    }
+    .login-avatar {
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      background: var(--vb-grad-main);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.8rem; font-weight: 800; color: #fff;
+      box-shadow: 0 6px 22px rgba(111,66,193,0.28);
+      margin-bottom: 6px;
+      transition: all 0.4s;
+      overflow: hidden;
+      position: relative;
+    }
+    .login-avatar img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;
+    }
+    .login-avatar-sub {
+      font-size: 0.78rem; color: #9097a5;
+    }
+
+    /* ─── Responsive ──────────────────────────────── */
+    @media (max-width: 900px) {
+      .auth-left { display: none; }
+      .auth-right { width: 100%; padding: 2rem 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ LEFT PANEL ════════════════ -->
+<div class="auth-left">
+  <div class="brand-logo">
+    <div class="logo-icon"><i class="fas fa-link"></i></div>
+    <div class="logo-text">Vendor<span>Bridge</span></div>
+  </div>
+  <div class="left-headline">Smarter Procurement,<br/>Seamless Vendor Relations</div>
+  <p class="left-subtext">An all-in-one ERP platform that connects your teams, vendors, and procurement workflows in one place.</p>
+
+  <div class="feature-pills">
+    <div class="feature-pill">
+      <div class="pill-icon"><i class="fas fa-file-invoice"></i></div>
+      <div class="pill-text">Automated RFQ & Quotation Workflows</div>
+    </div>
+    <div class="feature-pill">
+      <div class="pill-icon"><i class="fas fa-balance-scale"></i></div>
+      <div class="pill-text">Side-by-side Quotation Comparison</div>
+    </div>
+    <div class="feature-pill">
+      <div class="pill-icon"><i class="fas fa-shield-check"></i></div>
+      <div class="pill-text">Role-based Approval Engine</div>
+    </div>
+    <div class="feature-pill">
+      <div class="pill-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="pill-text">Real-time Procurement Analytics</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ RIGHT PANEL ════════════════ -->
+<div class="auth-right">
+  <div class="auth-card">
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">
+        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+      </div>
+      <div class="auth-tab" id="tab-register" onclick="switchTab('register')">
+        <i class="fas fa-user-plus me-2"></i>Register
+      </div>
+    </div>
+
+    <!-- Alert container -->
+    <div id="alert-box"></div>
+
+    <!-- ══════ LOGIN FORM ══════ -->
+    <div class="form-panel active" id="panel-login">
+
+      <!-- Profile photo upload for login -->
+      <div class="login-avatar-wrap">
+        <div class="login-avatar" id="login-avatar-circle">
+          <i class="fas fa-user" style="font-size:2rem; color:rgba(255,255,255,0.8);"></i>
+          <img id="login-avatar-img" src="" alt=""/>
+        </div>
+        <div class="login-avatar-sub">Your Profile</div>
+      </div>
+
+      <div class="form-title" style="text-align:center;">Welcome back 👋</div>
+      <div class="form-subtitle" style="text-align:center; margin-bottom:1.4rem;">Sign in to your VendorBridge account</div>
+
+      <div class="field-group">
+        <label>Username / Email</label>
+        <div class="input-wrap">
+          <input type="text" id="login-email" placeholder="username or email" autocomplete="username" oninput="updateLoginAvatar(this.value)"/>
+          <i class="fas fa-user field-icon"></i>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <i class="fas fa-lock field-icon"></i>
+          <i class="fas fa-eye toggle-pw" onclick="togglePw('login-password',this)"></i>
+        </div>
+      </div>
+
+      <div class="forgot-row">
+        <a href="#" onclick="openForgot(event)">Forgot password?</a>
+      </div>
+
+      <button class="btn-vb-primary" id="btn-login" onclick="doLogin()">
+        <i class="fas fa-arrow-right-to-bracket me-2"></i>Login
+      </button>
+
+      <div class="or-divider" style="margin-top:1.2rem;">or continue with</div>
+      <div class="oauth-btns">
+        <button class="btn-oauth" onclick="oauthClick('Google')">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.2 1.5 8.1 2.8l6-6C34.4 3.2 29.6 1 24 1 14.7 1 6.8 6.5 3 14.3l7 5.4C11.7 13.5 17.4 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.5-.1-2.9-.4-4.3H24v8.1h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.3-4 6.8-9.9 7.2-16.7z"/><path fill="#FBBC05" d="M10 28.3c-.5-1.5-.8-3-.8-4.8s.3-3.3.8-4.8l-7-5.4C1.3 16.7 0 20.2 0 24s1.3 7.3 3 10.7l7-5.4z"/><path fill="#34A853" d="M24 47c5.5 0 10.2-1.8 13.6-4.9l-7.4-5.7c-1.9 1.3-4.4 2-6.2 2-6.6 0-12.3-4-14.8-9.9l-7 5.4C6.7 41.5 14.7 47 24 47z"/></svg>
+          Google
+        </button>
+        <button class="btn-oauth" onclick="oauthClick('Microsoft')">
+          <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Microsoft
+        </button>
+      </div>
+
+      <p class="switch-note">Don't have an account? <a onclick="switchTab('register')">Create one free</a></p>
+    </div>
+
+    <!-- ══════ REGISTER FORM ══════ -->
+    <div class="form-panel" id="panel-register">
+      <div class="form-title">Create Account ✨</div>
+      <div class="form-subtitle">Join VendorBridge — fill in your details below</div>
+
+      <!-- Photo upload -->
+      <div class="photo-upload-area">
+        <div class="photo-ring" onclick="document.getElementById('reg-photo-input').click()">
+          <div class="photo-placeholder" id="photo-placeholder">
+            <i class="fas fa-camera"></i>
+            <span>Upload Photo</span>
+          </div>
+          <img id="reg-photo-preview" src="" alt=""/>
+          <div class="photo-badge"><i class="fas fa-plus"></i></div>
+          <input type="file" id="reg-photo-input" accept="image/*" onchange="previewPhoto(this)" style="display:none"/>
+        </div>
+        <div class="photo-upload-label">Profile Photo (optional)</div>
+      </div>
+
+      <!-- Name row -->
+      <div class="field-row">
+        <div class="field-group">
+          <label>First Name</label>
+          <div class="input-wrap">
+            <input type="text" id="reg-fname" placeholder="John"/>
+            <i class="fas fa-user field-icon"></i>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Last Name</label>
+          <div class="input-wrap">
+            <input type="text" id="reg-lname" placeholder="Doe"/>
+            <i class="fas fa-user field-icon"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <input type="email" id="reg-email" placeholder="you@company.com"/>
+          <i class="fas fa-envelope field-icon"></i>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Phone Number</label>
+        <div class="input-wrap">
+          <input type="tel" id="reg-phone" placeholder="+91 98765 43210"/>
+          <i class="fas fa-phone field-icon"></i>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="reg-password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)"/>
+          <i class="fas fa-lock field-icon"></i>
+          <i class="fas fa-eye toggle-pw" onclick="togglePw('reg-password',this)"></i>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bars">
+            <div class="pw-bar" id="bar1"></div>
+            <div class="pw-bar" id="bar2"></div>
+            <div class="pw-bar" id="bar3"></div>
+            <div class="pw-bar" id="bar4"></div>
+          </div>
+          <div class="pw-label" id="pw-label">Enter a password</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Additional Information</label>
+        <div class="input-wrap" style="position:relative;">
+          <textarea id="reg-additional" placeholder="Tell us about your role, organization, or any notes…"
+            style="width:100%; padding:11px 14px 11px 40px; border:1.5px solid #e3e6ef; border-radius:10px; font-size:0.9rem; font-family:'DM Sans',sans-serif; color:#1a1d2e; background:#fafbfe; resize:vertical; min-height:90px; outline:none; transition:all 0.25s;"
+            onfocus="this.style.borderColor='var(--vb-purple)';this.style.boxShadow='0 0 0 3.5px rgba(111,66,193,0.1)'"
+            onblur="this.style.borderColor='#e3e6ef';this.style.boxShadow='none'"></textarea>
+          <i class="fas fa-pen-to-square field-icon" style="top:14px;transform:none;"></i>
+        </div>
+      </div>
+
+      <div class="agree-row">
+        <input type="checkbox" id="agree-terms"/>
+        <label for="agree-terms">
+          I agree to VendorBridge's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button class="btn-vb-primary" id="btn-register" onclick="doRegister()">
+        <i class="fas fa-check me-2"></i>Register
+      </button>
+
+      <p class="switch-note">Already have an account? <a onclick="switchTab('login')">Sign in</a></p>
+    </div><!-- /panel-register -->
+
+  </div><!-- /auth-card -->
+</div><!-- /auth-right -->
+
+<!-- ════════════════ FORGOT PASSWORD MODAL ════════════════ -->
+<div class="modal-overlay" id="forgot-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeForgot()"><i class="fas fa-times"></i></button>
+    <div style="text-align:center; margin-bottom:1.2rem;">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,rgba(111,66,193,0.12),rgba(13,110,253,0.12));border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <i class="fas fa-paper-plane" style="font-size:1.4rem;color:var(--vb-purple);"></i>
+      </div>
+      <div class="form-title" style="font-size:1.35rem;">Reset Password</div>
+      <div class="form-subtitle" style="margin-bottom:0;">Enter your email and we'll send a reset link</div>
+    </div>
+    <div id="forgot-alert"></div>
+    <div class="field-group">
+      <label>Registered Email</label>
+      <div class="input-wrap">
+        <input type="email" id="forgot-email" placeholder="you@company.com"/>
+        <i class="fas fa-envelope field-icon"></i>
+      </div>
+    </div>
+    <button class="btn-vb-primary" onclick="doForgot()">
+      <i class="fas fa-paper-plane me-2"></i>Send Reset Link
+    </button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  /* ─── Tab switch ───────────────────────────────── */
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    clearAlert();
+  }
+
+  /* ─── Alert helpers ────────────────────────────── */
+  function showAlert(msg, type='error', targetId='alert-box') {
+    const icons = { error:'fa-circle-exclamation', success:'fa-circle-check', info:'fa-circle-info' };
+    document.getElementById(targetId).innerHTML =
+      `<div class="vb-alert ${type}"><i class="fas ${icons[type]}"></i>${msg}</div>`;
+  }
+  function clearAlert(targetId='alert-box') {
+    document.getElementById(targetId).innerHTML = '';
+  }
+
+  /* ─── Toggle password ──────────────────────────── */
+  function togglePw(id, icon) {
+    const inp = document.getElementById(id);
+    if (inp.type === 'password') { inp.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+    else { inp.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+  }
+
+  /* ─── Login avatar: show initials as user types ── */
+  function updateLoginAvatar(val) {
+    const circle = document.getElementById('login-avatar-circle');
+    val = val.trim();
+    const icon = circle.querySelector('i');
+    if (val.length > 0) {
+      const initials = val.substring(0,2).toUpperCase();
+      icon.style.display = 'none';
+      // show initials via a span
+      let span = circle.querySelector('span.av-init');
+      if (!span) { span = document.createElement('span'); span.className='av-init'; span.style.cssText='font-size:1.7rem;font-weight:800;font-family:"Plus Jakarta Sans",sans-serif;color:#fff;'; circle.appendChild(span); }
+      span.textContent = initials;
+    } else {
+      icon.style.display = '';
+      const span = circle.querySelector('span.av-init');
+      if (span) span.remove();
+    }
+  }
+
+  /* ─── Login ─────────────────────────────────────── */
+  function doLogin() {
+    clearAlert();
+    const email = document.getElementById('login-email').value.trim();
+    const pw    = document.getElementById('login-password').value;
+    if (!email || !pw) { showAlert('Please fill in all fields.'); return; }
+    if (pw.length < 6) { showAlert('Password must be at least 6 characters.'); return; }
+
+    const btn = document.getElementById('btn-login');
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing in…';
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket me-2"></i>Login';
+      showAlert(`Welcome back! Redirecting to dashboard… <br><small style="opacity:.75">(Logged in as: ${email})</small>`, 'success');
+    }, 1800);
+  }
+
+  /* ─── OAuth placeholder ────────────────────────── */
+  function oauthClick(provider) {
+    showAlert(`${provider} OAuth integration will be connected once the backend is ready.`, 'info');
+  }
+
+  /* ─── Photo preview (register) ─────────────────── */
+  function previewPhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const preview = document.getElementById('reg-photo-preview');
+      const placeholder = document.getElementById('photo-placeholder');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  /* ─── Password strength ────────────────────────── */
+  function checkStrength(pw) {
+    const bars  = [1,2,3,4].map(i => document.getElementById('bar' + i));
+    const label = document.getElementById('pw-label');
+    let score = 0;
+    if (pw.length >= 8)             score++;
+    if (/[A-Z]/.test(pw))           score++;
+    if (/[0-9]/.test(pw))           score++;
+    if (/[^A-Za-z0-9]/.test(pw))    score++;
+
+    const levels = ['','weak','fair','good','strong'];
+    const texts  = ['Enter a password','Weak – too short','Fair – add numbers','Good – add symbols','Strong password ✓'];
+    const colors = { weak:'#ef4444', fair:'var(--vb-orange)', good:'var(--vb-teal)', strong:'#22c55e' };
+
+    bars.forEach((b, i) => {
+      b.className = 'pw-bar';
+      if (i < score) b.classList.add(levels[score]);
+    });
+    label.textContent = texts[score];
+    label.style.color = score ? colors[levels[score]] : '#8a909e';
+  }
+
+  /* ─── Register submit ──────────────────────────── */
+  function doRegister() {
+    clearAlert();
+    const fname = document.getElementById('reg-fname').value.trim();
+    const lname = document.getElementById('reg-lname').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const pw    = document.getElementById('reg-password').value;
+
+    if (!fname || !lname) { showAlert('Please enter your full name.'); return; }
+    if (!email || !email.includes('@')) { showAlert('Enter a valid email address.'); return; }
+    if (!phone) { showAlert('Please enter your phone number.'); return; }
+    if (pw.length < 8) { showAlert('Password must be at least 8 characters.'); return; }
+    if (!document.getElementById('agree-terms').checked) {
+      showAlert('Please agree to the Terms of Service.'); return;
+    }
+
+    const btn = document.getElementById('btn-register');
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account…';
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.innerHTML = '<i class="fas fa-check me-2"></i>Register';
+      showAlert(`🎉 Account created for <strong>${fname} ${lname}</strong>! Check your email for verification.`, 'success');
+      setTimeout(() => { switchTab('login'); }, 2800);
+    }, 2000);
+  }
+
+  /* ─── Forgot password ──────────────────────────── */
+  function openForgot(e) { e.preventDefault(); document.getElementById('forgot-modal').classList.add('open'); }
+  function closeForgot() { document.getElementById('forgot-modal').classList.remove('open'); document.getElementById('forgot-alert').innerHTML=''; }
+
+  function doForgot() {
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email||!email.includes('@')) { showAlert('Enter a valid email.','error','forgot-alert'); return; }
+    showAlert(`Reset link sent to <strong>${email}</strong>. Check your inbox.`,'success','forgot-alert');
+    setTimeout(closeForgot, 2500);
+  }
+
+  document.getElementById('forgot-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeForgot();
+  });
+</script>
+</body>
+</html>

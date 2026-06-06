@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendorBridge – Activity</title>
+  <meta name="description" content="VendorBridge Quotations – submit, track and compare vendor quotations for RFQs."/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ══════════════════════════════════════════════════
+       DESIGN TOKENS — identical to all VendorBridge screens
+    ══════════════════════════════════════════════════ */
+    :root {
+      --vb-purple:    #6f42c1;
+      --vb-blue:      #0d6efd;
+      --vb-teal:      #20c997;
+      --vb-orange:    #fd7e14;
+      --vb-indigo:    #6610f2;
+      --vb-pink:      #d63384;
+      --vb-green:     #22c55e;
+      --vb-red:       #ef4444;
+      --vb-grad-main: linear-gradient(135deg,var(--vb-purple) 0%,var(--vb-blue) 60%,var(--vb-teal) 100%);
+      --vb-grad-btn:  linear-gradient(45deg,var(--vb-purple),var(--vb-blue));
+      --vb-grad-btn-h:linear-gradient(45deg,var(--vb-indigo),var(--vb-purple));
+      --vb-shadow:    0 8px 32px rgba(111,66,193,.18);
+      --vb-shadow-lg: 0 20px 60px rgba(111,66,193,.22);
+      --sidebar-w:    240px;
+      --topbar-h:     64px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f4f5fb;min-height:100vh;display:flex;overflow-x:hidden;color:#1a1d2e}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(111,66,193,.25);border-radius:4px}
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid #eaecf4;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s ease}
+    .sidebar-brand{display:flex;align-items:center;gap:12px;padding:20px 20px 18px;border-bottom:1px solid #eaecf4}
+    .sidebar-brand .logo-icon{width:38px;height:38px;background:var(--vb-grad-btn);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(111,66,193,.35)}
+    .sidebar-brand .logo-icon i{color:#fff;font-size:1rem}
+    .sidebar-brand .logo-text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.15rem;color:#1a1d2e;letter-spacing:-.3px}
+    .sidebar-brand .logo-text span{font-weight:400;color:#6f42c1}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+    .nav-label{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0b7c8;padding:8px 10px 4px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;cursor:pointer;text-decoration:none;color:#6b7490;font-size:.875rem;font-weight:500;transition:all .22s;margin-bottom:2px;position:relative}
+    .nav-item i{width:18px;text-align:center;font-size:.9rem}
+    .nav-item:hover{background:rgba(111,66,193,.06);color:var(--vb-purple)}
+    .nav-item.active{background:rgba(111,66,193,.1);color:var(--vb-purple);font-weight:600}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--vb-grad-btn);border-radius:0 3px 3px 0}
+    .nav-badge{margin-left:auto;background:var(--vb-grad-btn);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-badge.red{background:#ef4444}
+    .sidebar-user{padding:14px 16px;border-top:1px solid #eaecf4;display:flex;align-items:center;gap:10px}
+    .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--vb-grad-main);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
+    .user-info{flex:1;min-width:0}
+    .user-info .uname{font-size:.82rem;font-weight:600;color:#1a1d2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-info .urole{font-size:.7rem;color:#9097a5}
+    .user-cog{color:#b0b7c8;cursor:pointer;font-size:.85rem;transition:color .2s}
+    .user-cog:hover{color:var(--vb-purple)}
+
+    /* ── TOP BAR ─────────────────────────────────────── */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:#fff;border-bottom:1px solid #eaecf4;display:flex;align-items:center;padding:0 28px;gap:16px;z-index:100}
+    .topbar-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1.05rem;color:#1a1d2e;flex:1}
+    .topbar-title span{color:#b0b7c8;font-weight:400}
+    .topbar-search{position:relative}
+    .topbar-search input{background:#f4f5fb;border:1.5px solid #e8eaf0;border-radius:10px;padding:8px 14px 8px 36px;font-size:.83rem;color:#1a1d2e;width:220px;outline:none;font-family:'DM Sans',sans-serif;transition:all .25s}
+    .topbar-search input:focus{border-color:var(--vb-purple);background:#fff;box-shadow:0 0 0 3px rgba(111,66,193,.1);width:260px}
+    .topbar-search i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#b0b7c8;font-size:.82rem}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .topbar-icon-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7490;font-size:.9rem;transition:all .22s;position:relative;text-decoration:none}
+    .topbar-icon-btn:hover{border-color:var(--vb-purple);color:var(--vb-purple);background:rgba(111,66,193,.04)}
+    .notif-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;position:absolute;top:5px;right:5px;border:2px solid #fff}
+
+    /* ── MAIN CONTENT ────────────────────────────────── */
+    .main-content{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);min-height:100vh;flex:1;display:flex;flex-direction:column}
+    .page-body{padding:28px 32px;flex:1}
+
+    /* ── PAGE HEADER ─────────────────────────────────── */
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .page-header h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1d2e;margin:0}
+    .page-header p{font-size:.88rem;color:#8a909e;margin:2px 0 0}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* ── BUTTONS ─────────────────────────────────────── */
+    .btn-vb-primary{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:var(--vb-grad-btn);color:#fff;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .3s;box-shadow:0 4px 18px rgba(111,66,193,.3);letter-spacing:.2px;text-decoration:none}
+    .btn-vb-primary:hover{background:var(--vb-grad-btn-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(111,66,193,.4);color:#fff}
+    .btn-vb-primary:active{transform:translateY(0)}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:transparent;color:var(--vb-purple);border:1.5px solid rgba(111,66,193,.35);border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .25s;text-decoration:none}
+    .btn-outline:hover{background:rgba(111,66,193,.06);border-color:var(--vb-purple);color:var(--vb-purple)}
+    .btn-sm{padding:7px 14px;font-size:.8rem;border-radius:8px}
+
+    /* ── STATS STRIP ─────────────────────────────────── */
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:#fff;border-radius:14px;padding:18px 20px;border:1px solid #eaecf4;display:flex;align-items:center;gap:14px;transition:box-shadow .25s;position:relative;overflow:hidden}
+    .stat-card::after{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:var(--accent-color,rgba(111,66,193,.05))}
+    .stat-card:hover{box-shadow:var(--vb-shadow)}
+    .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;position:relative;z-index:1}
+    .stat-icon.purple{background:rgba(111,66,193,.1);color:var(--vb-purple)}
+    .stat-icon.blue  {background:rgba(13,110,253,.1);color:var(--vb-blue)}
+    .stat-icon.teal  {background:rgba(32,201,151,.1);color:var(--vb-teal)}
+    .stat-icon.orange{background:rgba(253,126,20,.1);color:var(--vb-orange)}
+    .stat-icon.green {background:rgba(34,197,94,.1);color:var(--vb-green)}
+    .stat-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1d2e;line-height:1}
+    .stat-lbl{font-size:.76rem;color:#9097a5;margin-top:3px}
+    .stat-trend{font-size:.72rem;font-weight:600;margin-top:4px}
+    .stat-trend.up{color:var(--vb-green)}
+    .stat-trend.down{color:var(--vb-red)}
+
+    /* ── TOOLBAR ─────────────────────────────────────── */
+    .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+    .filter-tabs{display:flex;background:#fff;border:1.5px solid #e8eaf0;border-radius:10px;padding:3px;gap:2px}
+    .filter-tab{padding:7px 16px;border-radius:7px;font-size:.8rem;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;color:#9097a5;cursor:pointer;transition:all .22s;user-select:none;white-space:nowrap}
+    .filter-tab.active{background:var(--vb-grad-btn);color:#fff;box-shadow:0 3px 10px rgba(111,66,193,.28)}
+    .filter-tab:hover:not(.active){color:var(--vb-purple)}
+    .toolbar-spacer{flex:1}
+    .sort-select{background:#fff;border:1.5px solid #e8eaf0;border-radius:10px;padding:8px 14px;font-size:.82rem;color:#4a5068;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;transition:border-color .22s}
+    .sort-select:focus{border-color:var(--vb-purple)}
+
+    /* ── TABLE CARD ──────────────────────────────────── */
+    .table-card{background:#fff;border-radius:16px;border:1px solid #eaecf4;overflow:hidden;margin-bottom:28px;box-shadow:0 2px 12px rgba(111,66,193,.06)}
+    .vb-table{width:100%;border-collapse:collapse}
+    .vb-table thead th{background:#fafbfe;padding:13px 18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.73rem;font-weight:700;color:#9097a5;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #eaecf4;white-space:nowrap;cursor:pointer;user-select:none}
+    .vb-table thead th:hover{color:var(--vb-purple)}
+    .vb-table thead th i{margin-left:4px;opacity:.5;font-size:.68rem}
+    .vb-table tbody tr{border-bottom:1px solid #f0f2f7;transition:background .18s}
+    .vb-table tbody tr:last-child{border-bottom:none}
+    .vb-table tbody tr:hover{background:rgba(111,66,193,.025)}
+    .vb-table tbody td{padding:14px 18px;font-size:.85rem;color:#4a5068;vertical-align:middle}
+
+    /* Table cell helpers */
+    .quot-id{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--vb-purple);font-size:.82rem}
+    .rfq-cell .rfq-ref{font-weight:600;color:#1a1d2e;font-size:.88rem}
+    .rfq-cell .rfq-sub{font-size:.75rem;color:#9097a5;margin-top:2px}
+    .vendor-chip-sm{display:inline-flex;align-items:center;gap:5px;background:rgba(111,66,193,.08);border:1px solid rgba(111,66,193,.2);border-radius:20px;padding:3px 10px;font-size:.73rem;font-weight:600;color:var(--vb-purple);font-family:'Plus Jakarta Sans',sans-serif}
+    .amount-cell{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#1a1d2e;font-size:.9rem}
+    .amount-cell small{font-size:.72rem;color:#9097a5;font-weight:400}
+
+    /* Badges */
+    .badge-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
+    .badge-status::before{content:'';width:6px;height:6px;border-radius:50%}
+    .badge-status.draft     {background:#f4f5fb;color:#9097a5}      .badge-status.draft::before    {background:#c4c9d6}
+    .badge-status.submitted {background:rgba(13,110,253,.1);color:var(--vb-blue)} .badge-status.submitted::before{background:var(--vb-blue)}
+    .badge-status.under-review{background:rgba(253,126,20,.1);color:var(--vb-orange)} .badge-status.under-review::before{background:var(--vb-orange)}
+    .badge-status.accepted  {background:rgba(34,197,94,.1);color:var(--vb-green)}  .badge-status.accepted::before {background:var(--vb-green)}
+    .badge-status.rejected  {background:rgba(239,68,68,.1);color:var(--vb-red)}   .badge-status.rejected::before {background:var(--vb-red)}
+    .badge-status.won       {background:rgba(32,201,151,.1);color:var(--vb-teal)}  .badge-status.won::before      {background:var(--vb-teal)}
+
+    .badge-priority{padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif}
+    .badge-priority.high  {background:rgba(239,68,68,.1);color:#ef4444}
+    .badge-priority.medium{background:rgba(253,126,20,.1);color:var(--vb-orange)}
+    .badge-priority.low   {background:rgba(32,201,151,.1);color:var(--vb-teal)}
+
+    .row-actions{display:flex;gap:6px}
+    .row-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9097a5;font-size:.78rem;transition:all .22s}
+    .row-btn:hover{border-color:var(--vb-purple);color:var(--vb-purple);background:rgba(111,66,193,.04)}
+    .row-btn.danger:hover{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,.04)}
+    .row-btn.success:hover{border-color:var(--vb-green);color:var(--vb-green);background:rgba(34,197,94,.04)}
+
+    /* Empty state */
+    .empty-state{text-align:center;padding:60px 20px}
+    .empty-icon{width:80px;height:80px;border-radius:50%;background:rgba(111,66,193,.08);display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:var(--vb-purple);margin-bottom:16px}
+    .empty-state h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:700;color:#1a1d2e;margin-bottom:6px}
+    .empty-state p{font-size:.85rem;color:#9097a5;margin-bottom:20px}
+
+    /* Pagination */
+    .pagination-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid #eaecf4;background:#fafbfe;flex-wrap:wrap;gap:10px}
+    .pag-info{font-size:.8rem;color:#9097a5}
+    .pag-btns{display:flex;gap:4px}
+    .pag-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;font-weight:600;color:#6b7490;transition:all .22s;font-family:'Plus Jakarta Sans',sans-serif}
+    .pag-btn:hover,.pag-btn.active{background:var(--vb-grad-btn);color:#fff;border-color:transparent;box-shadow:0 3px 8px rgba(111,66,193,.3)}
+
+    /* ── RFQ SUMMARY BANNER ──────────────────────────── */
+    .rfq-banner{background:#fff;border:1px solid #eaecf4;border-radius:14px;padding:18px 22px;margin-bottom:22px;display:flex;align-items:center;gap:20px;box-shadow:0 2px 12px rgba(111,66,193,.06)}
+    .rfq-banner-icon{width:48px;height:48px;border-radius:13px;background:var(--vb-grad-btn);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;box-shadow:0 4px 12px rgba(111,66,193,.3)}
+    .rfq-banner-info{flex:1;min-width:0}
+    .rfq-banner-info .rfq-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1rem;color:#1a1d2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rfq-banner-info .rfq-meta{font-size:.8rem;color:#9097a5;margin-top:3px}
+    .rfq-banner-info .rfq-meta span{color:var(--vb-purple);font-weight:600}
+    .rfq-banner-actions{display:flex;gap:8px}
+
+    /* ── SUBMIT QUOTATION PANEL ──────────────────────── */
+    .submit-panel{background:#fff;border-radius:16px;border:1px solid #eaecf4;box-shadow:0 2px 12px rgba(111,66,193,.06);margin-bottom:28px;overflow:hidden}
+    .panel-header{display:flex;align-items:center;gap:14px;padding:20px 24px 18px;border-bottom:1px solid #eaecf4;background:linear-gradient(135deg,rgba(111,66,193,.04),rgba(13,110,253,.03))}
+    .panel-header-icon{width:40px;height:40px;border-radius:11px;background:rgba(111,66,193,.1);display:flex;align-items:center;justify-content:center;color:var(--vb-purple);font-size:1rem;flex-shrink:0}
+    .panel-header h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:800;color:#1a1d2e;margin:0}
+    .panel-header p{font-size:.78rem;color:#9097a5;margin:2px 0 0}
+    .panel-body{padding:22px 24px}
+
+    /* Form fields */
+    .field-group{margin-bottom:16px}
+    .field-group label{font-size:.8rem;font-weight:600;color:#4a5068;margin-bottom:6px;display:block;font-family:'Plus Jakarta Sans',sans-serif}
+    .field-group label .req{color:#ef4444;margin-left:2px}
+    .input-wrap{position:relative}
+    .input-wrap .field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#b0b7c8;font-size:.85rem;pointer-events:none;transition:color .25s}
+    .input-wrap input,
+    .input-wrap select,
+    .input-wrap textarea{width:100%;padding:10px 13px 10px 38px;border:1.5px solid #e3e6ef;border-radius:10px;font-size:.88rem;font-family:'DM Sans',sans-serif;color:#1a1d2e;background:#fafbfe;transition:all .25s;outline:none;-webkit-appearance:none}
+    .input-wrap textarea{padding-top:12px;min-height:85px;resize:vertical}
+    .input-wrap input:focus,.input-wrap select:focus,.input-wrap textarea:focus{border-color:var(--vb-purple);background:#fff;box-shadow:0 0 0 3.5px rgba(111,66,193,.1)}
+    .input-wrap:focus-within .field-icon{color:var(--vb-purple)}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+    /* Line Items inside panel */
+    .section-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#b0b7c8;margin-bottom:12px;margin-top:4px}
+    .quot-items-table{width:100%;border-collapse:collapse;margin-bottom:12px}
+    .quot-items-table thead th{background:#fafbfe;padding:9px 12px;font-size:.71rem;font-weight:700;color:#9097a5;text-transform:uppercase;letter-spacing:.5px;border:1px solid #eaecf4;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
+    .quot-items-table tbody td{border:1px solid #eaecf4;padding:0}
+    .quot-items-table tbody td input,.quot-items-table tbody td select{width:100%;border:none;background:transparent;font-size:.84rem;font-family:'DM Sans',sans-serif;color:#1a1d2e;outline:none;padding:9px 10px}
+    .quot-items-table tbody tr:hover{background:#fafbfe}
+    .quot-items-table tbody td.total-cell{background:rgba(111,66,193,.04);text-align:right;padding:9px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:var(--vb-purple);font-size:.84rem}
+
+    .add-row-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px dashed rgba(111,66,193,.4);border-radius:8px;background:rgba(111,66,193,.04);color:var(--vb-purple);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .22s;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:20px}
+    .add-row-btn:hover{background:rgba(111,66,193,.1);border-color:var(--vb-purple)}
+
+    /* Totals box */
+    .totals-box{background:linear-gradient(135deg,rgba(111,66,193,.04),rgba(13,110,253,.03));border:1px solid rgba(111,66,193,.12);border-radius:12px;padding:16px 18px;margin-top:4px}
+    .totals-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.85rem;color:#4a5068}
+    .totals-row.border-top{border-top:1.5px solid rgba(111,66,193,.15);margin-top:6px;padding-top:10px}
+    .totals-row.grand{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.05rem;color:#1a1d2e}
+    .totals-row span:last-child{font-weight:600;font-family:'Plus Jakarta Sans',sans-serif}
+    .totals-row.grand span:last-child{color:var(--vb-purple);font-size:1.15rem}
+
+    /* Panel footer */
+    .panel-footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid #eaecf4;background:#fafbfe}
+
+    /* ── MODAL (View Detail) ──────────────────────────── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,30,.5);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex;animation:fadeInUp .3s ease}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .modal-box{background:#fff;border-radius:20px;width:92%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:var(--vb-shadow-lg);animation:fadeInUp .35s ease}
+    .modal-header{display:flex;align-items:center;gap:14px;padding:22px 26px 18px;border-bottom:1px solid #eaecf4;position:sticky;top:0;background:#fff;z-index:10;border-radius:20px 20px 0 0}
+    .modal-header-icon{width:44px;height:44px;border-radius:12px;background:rgba(111,66,193,.1);display:flex;align-items:center;justify-content:center;color:var(--vb-purple);font-size:1.1rem;flex-shrink:0}
+    .modal-header h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.15rem;font-weight:800;color:#1a1d2e;margin:0}
+    .modal-header p{font-size:.8rem;color:#9097a5;margin:2px 0 0}
+    .modal-close-btn{margin-left:auto;width:34px;height:34px;border-radius:8px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9097a5;font-size:.9rem;transition:all .22s}
+    .modal-close-btn:hover{border-color:#ef4444;color:#ef4444}
+    .modal-body{padding:22px 26px 26px}
+    .modal-footer{display:flex;gap:10px;padding:16px 26px 22px;border-top:1px solid #eaecf4}
+
+    /* Detail grid inside modal */
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+    .detail-item label{font-size:.72rem;color:#9097a5;display:block;margin-bottom:3px;font-weight:500}
+    .detail-item span{font-size:.88rem;font-weight:600;color:#1a1d2e}
+    .section-divider{height:1px;background:#eaecf4;margin:18px 0}
+
+    /* Vendor comparison mini table */
+    .compare-table{width:100%;border-collapse:collapse}
+    .compare-table th{background:#fafbfe;padding:8px 12px;font-size:.72rem;font-weight:700;color:#9097a5;text-transform:uppercase;letter-spacing:.5px;border:1px solid #eaecf4;font-family:'Plus Jakarta Sans',sans-serif}
+    .compare-table td{border:1px solid #eaecf4;padding:9px 12px;font-size:.83rem;color:#4a5068}
+    .compare-table .winner{background:rgba(32,201,151,.07);font-weight:700;color:var(--vb-teal)}
+
+    /* ── ALERT ───────────────────────────────────────── */
+    .vb-alert{border-radius:10px;padding:10px 14px;font-size:.83rem;margin-bottom:14px;display:flex;align-items:center;gap:10px;animation:fadeInUp .3s ease}
+    .vb-alert.success{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
+    .vb-alert.error  {background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+    .vb-alert.info   {background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+
+    /* ── TOAST ───────────────────────────────────────── */
+    #toast-container{position:fixed;bottom:26px;right:26px;z-index:99999;display:flex;flex-direction:column;gap:10px}
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.mobile-open{transform:translateX(0)}
+      .main-content{margin-left:0}
+      .topbar{left:0}
+      .stats-strip{grid-template-columns:repeat(2,1fr)}
+      #hamburger-btn{display:block!important}
+    }
+    @media(max-width:640px){
+      .stats-strip{grid-template-columns:1fr 1fr}
+      .field-row,.field-row-3{grid-template-columns:1fr}
+      .page-body{padding:18px 16px}
+    }
+    .filters-row{
+    display:flex;
+    gap:15px;
+    margin:20px 0 25px;
+    flex-wrap:wrap;
+}
+
+.filter-btn{
+    padding:10px 25px;
+    border:1px solid #d9d9d9;
+    background:#fff;
+    border-radius:10px;
+    cursor:pointer;
+    min-width:120px;
+    height:45px;
+    font-weight:500;
+}
+
+.filter-btn.active{
+    background:#2563eb;
+    color:#fff;
+    border:none;
+}
+
+.timeline-item{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+    padding:20px 0;
+    border-bottom:1px solid #eceff5;
+}
+
+.timeline-item:last-child{
+    border-bottom:none;
+}
+
+.timeline-icon{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+.timeline-content{
+    flex:1;
+    line-height:1.6;
+}
+
+.timeline-date{
+    margin-top:5px;
+    color:#8a909e;
+    font-size:13px;
+}
+
+.success{
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.pending{
+    background:#dbeafe;
+    color:#2563eb;
+}
+
+.info{
+    background:#ede9fe;
+    color:#7c3aed;
+}
+
+.danger{
+    background:#ffe4e6;
+    color:#e11d48;
+}
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon"><i class="fas fa-link"></i></div>
+    <div class="logo-text">Vendor<span>Bridge</span></div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+
+    <!--
+      ★ SCREEN LINKS — update hrefs when teammates create their files:
+         Screen 1/2  →  vendorbridge-auth.html          (Login & Register)
+         Screen 3    →  vendorbridge-dashboard.html      (Dashboard)
+         Screen 4    →  vendorbridge-vendors.html        (Vendors)
+         Screen 5    →  vendorbridge-rfq.html            (RFQ's)
+         Screen 6    →  vendorbridge-quotations.html     (Quotations) ← this file
+         Screen 7    →  vendorbridge-quotation-compare.html (Comparison)
+         Screen 8+   →  add links below as teammates complete them
+    -->
+    <a href="vendorbridge-dashboard.html"          class="nav-item" id="nav-dashboard">
+      <i class="fas fa-gauge-high"></i> Dashboard
+    </a>
+    <a href="vendorbridge-vendors.html"            class="nav-item" id="nav-vendors">
+      <i class="fas fa-store"></i> Vendors
+    </a>
+    <a href="vendorbridge-rfq.html"                class="nav-item" id="nav-rfq">
+      <i class="fas fa-file-invoice"></i> RFQ's
+      <span class="nav-badge">8</span>
+    </a>
+    <a href="vendorbridge-quotations.html"         class="nav-item active" id="nav-quotations">
+      <i class="fas fa-file-circle-check"></i> Quotations
+      <span class="nav-badge">12</span>
+    </a>
+    <a href="vendorbridge-approvals.html"          class="nav-item" id="nav-approvals">
+      <i class="fas fa-check-double"></i> Approvals
+      <span class="nav-badge red">3</span>
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">Procurement</div>
+    <a href="vendorbridge-purchase-orders-invoices.html"    class="nav-item" id="nav-po">
+      <i class="fas fa-cart-flatbed"></i> Purchase Orders and invoices
+    </a>
+
+    <a href="vendorbridge-reports.html"            class="nav-item" id="nav-rep">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">System</div>
+    <a href="vendorbridge-activity.html"           class="nav-item" id="nav-act">
+      <i class="fas fa-bolt"></i> Activity
+    </a>
+    <a href="#"                                    class="nav-item" id="nav-settings">
+      <i class="fas fa-gear"></i> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">PS</div>
+    <div class="user-info">
+      <div class="uname">Procurement User</div>
+      <div class="urole">Procurement Officer</div>
+    </div>
+    <i class="fas fa-right-from-bracket user-cog" title="Logout"
+       onclick="window.location.href='vendorbridge-auth.html'"></i>
+  </div>
+</aside>
+
+<!-- ════════════════ TOP BAR ════════════════ -->
+<header class="topbar">
+  <button id="hamburger-btn"
+    style="display:none;background:none;border:none;font-size:1.2rem;color:#6b7490;cursor:pointer;margin-right:8px;"
+    onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+  <div class="topbar-title">
+    Activity
+  </div>
+
+  <div class="topbar-search">
+    <i class="fas fa-search"></i>
+    <input type="text" id="search-quot" placeholder="Search quotations…" oninput="filterTable(this.value)"/>
+  </div>
+
+  <div class="topbar-actions">
+    <div class="topbar-icon-btn" title="Notifications"
+         onclick="showToast('3 pending approvals require attention.','info')">
+      <i class="fas fa-bell"></i>
+      <span class="notif-dot"></span>
+    </div>
+    <div class="topbar-icon-btn" title="Help"><i class="fas fa-circle-question"></i></div>
+    <a href="vendorbridge-auth.html" class="topbar-icon-btn" title="Sign Out">
+      <i class="fas fa-right-from-bracket"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+ <main class="main-content">
+<div class="page-header">
+    <div>
+        <h1>Activity & Logs</h1>
+        <p>Procurement audit trail</p>
+    </div>
+</div>
+
+<!-- Filters -->
+
+<div class="filters-row">
+
+    <button class="filter-btn active">
+        All
+    </button>
+
+    <button class="filter-btn">
+        RFQ
+    </button>
+
+    <button class="filter-btn">
+        Approvals
+    </button>
+
+    <button class="filter-btn">
+        Invoices
+    </button>
+
+    <button class="filter-btn">
+        Vendors
+    </button>
+
+</div>
+
+<!-- Activity Card -->
+
+<div class="vb-card">
+
+    <div class="timeline-item">
+
+        <div class="timeline-icon success">
+            <i class="fas fa-check"></i>
+        </div>
+
+        <div class="timeline-content">
+            <strong>Quotation selected</strong>
+            - Infra Supplies Pvt Ltd selected for office furniture Q2
+
+            <div class="timeline-date">
+                23 May 2025, 04:15 PM
+            </div>
+        </div>
+
+    </div>
+
+    <div class="timeline-item">
+
+        <div class="timeline-icon pending">
+            <i class="fas fa-clock"></i>
+        </div>
+
+        <div class="timeline-content">
+            <strong>Approval pending</strong>
+            - PO-2024 awaiting L2 approval by Priya Shah
+
+            <div class="timeline-date">
+                22 May 2025, 09:15 AM
+            </div>
+        </div>
+
+    </div>
+
+    <div class="timeline-item">
+
+        <div class="timeline-icon info">
+            <i class="fas fa-file-alt"></i>
+        </div>
+
+        <div class="timeline-content">
+            <strong>RFQ published</strong>
+            - Office furniture Q2 sent to 3 vendors
+
+            <div class="timeline-date">
+                19 May 2025
+            </div>
+        </div>
+
+    </div>
+
+    <div class="timeline-item">
+
+        <div class="timeline-icon danger">
+            <i class="fas fa-user"></i>
+        </div>
+
+        <div class="timeline-content">
+            <strong>Vendor added</strong>
+            - FastLog Transport registered and pending verification
+
+            <div class="timeline-date">
+                18 May 2025, 03:20 PM
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</main>
+
+<!-- ════════════════ TOAST ════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script>
+  /* ── DATA ─────────────────────────────────────────── */
+  const RFQ_META = {
+    'RFQ-024':{ title:'Office Furniture – 2nd Floor Expansion', category:'Furniture',   deadline:'18 Jun 2026', priority:'High' },
+    'RFQ-023':{ title:'Laptop Refresh Q3 2026',                 category:'IT Equipment',deadline:'25 Jun 2026', priority:'High' },
+    'RFQ-022':{ title:'Stationery & Office Supplies',           category:'Stationery',  deadline:'20 Jun 2026', priority:'Low'  },
+    'RFQ-019':{ title:'Air Conditioning – Server Room',         category:'Construction',deadline:'1 Jul 2026',  priority:'Medium'},
+    'RFQ-017':{ title:'Raw Material – Steel Rods FE550',        category:'Raw Materials',deadline:'28 Jun 2026',priority:'High' },
+  };
+
+  let QUOTATIONS = [
+    { id:'QUOT-012', rfq:'RFQ-024', rfqTitle:'Office Furniture', vendor:'Infra Supplies Pvt Ltd', date:'2026-06-05', amount:206500, gstPct:18, delivery:7, payment:'Net 30 days', status:'under-review', notes:'Ergonomic chairs & standing desks. Includes 1-yr warranty.', items:[{name:'Ergonomic Chair',qty:25,unitPrice:5500,total:137500},{name:'Standing Desk',qty:10,unitPrice:6900,total:69000}] },
+    { id:'QUOT-011', rfq:'RFQ-023', rfqTitle:'Laptop Refresh Q3', vendor:'TechStar Solutions', date:'2026-06-04', amount:952000, gstPct:18, delivery:10, payment:'Advance 50%', status:'submitted', notes:'Core i7, 16GB RAM, 512GB SSD, 1-yr onsite warranty.', items:[{name:'Dell Latitude 5540',qty:40,unitPrice:23800,total:952000}] },
+    { id:'QUOT-010', rfq:'RFQ-022', rfqTitle:'Stationery Supplies', vendor:'Global Print Works', date:'2026-06-03', amount:85000, gstPct:12, delivery:3, payment:'On Delivery', status:'accepted', notes:'Monthly stationery pack – A4 paper, pens, folders.', items:[{name:'A4 Paper (500 sheets)',qty:200,unitPrice:280,total:56000},{name:'Pen Set',qty:300,unitPrice:70,total:21000},{name:'Folders',qty:100,unitPrice:80,total:8000}] },
+    { id:'QUOT-009', rfq:'RFQ-024', rfqTitle:'Office Furniture', vendor:'Timberon LTD', date:'2026-06-03', amount:221250, gstPct:18, delivery:10, payment:'Net 30 days', status:'under-review', notes:'Premium quality hardwood desks, foam ergonomic chairs.', items:[{name:'Ergonomic Chair',qty:25,unitPrice:5900,total:147500},{name:'Standing Desk',qty:10,unitPrice:7375,total:73750}] },
+    { id:'QUOT-008', rfq:'RFQ-019', rfqTitle:'AC – Server Room', vendor:'Infra Supplies Pvt Ltd', date:'2026-06-02', amount:750000, gstPct:18, delivery:14, payment:'Net 30 days', status:'draft', notes:'Precision cooling 5-ton units. Includes installation.', items:[{name:'Precision AC Unit 5T',qty:2,unitPrice:375000,total:750000}] },
+    { id:'QUOT-007', rfq:'RFQ-017', rfqTitle:'Steel Rods FE550', vendor:'CraftingTransport', date:'2026-06-01', amount:5500000, gstPct:18, delivery:7, payment:'Net 60 days', status:'won', notes:'50 MT Fe550 TMT rods, BIS certified, F2 grade.', items:[{name:'Fe550 TMT Steel Rod',qty:50000,unitPrice:110,total:5500000}] },
+    { id:'QUOT-006', rfq:'RFQ-022', rfqTitle:'Stationery Supplies', vendor:'Delta Logistics', date:'2026-05-30', amount:91000, gstPct:12, delivery:5, payment:'On Delivery', status:'rejected', notes:'Bulk stationery at competitive pricing.', items:[{name:'A4 Paper (500 sheets)',qty:200,unitPrice:310,total:62000},{name:'Pen Set',qty:300,unitPrice:63,total:18900},{name:'Folders',qty:100,unitPrice:101,total:10100}] },
+    { id:'QUOT-005', rfq:'RFQ-023', rfqTitle:'Laptop Refresh Q3', vendor:'Alpha Interiors', date:'2026-05-29', amount:940000, gstPct:18, delivery:8, payment:'Net 30 days', status:'submitted', notes:'HP EliteBook 840 G9, i7-1265U, 16GB, 512GB NVMe.', items:[{name:'HP EliteBook 840 G9',qty:40,unitPrice:23500,total:940000}] },
+    { id:'QUOT-004', rfq:'RFQ-019', rfqTitle:'AC – Server Room', vendor:'TechStar Solutions', date:'2026-05-28', amount:680000, gstPct:18, delivery:12, payment:'Advance 50%', status:'accepted', notes:'Daikin inverter precision AC, 5T. 3-yr AMC included.', items:[{name:'Daikin Precision AC',qty:2,unitPrice:340000,total:680000}] },
+    { id:'QUOT-003', rfq:'RFQ-024', rfqTitle:'Office Furniture', vendor:'Alpha Interiors', date:'2026-05-27', amount:200200, gstPct:18, delivery:5, payment:'Net 15 days', status:'won', notes:'Premium mesh chairs and height-adjustable desks.', items:[{name:'Ergonomic Mesh Chair',qty:25,unitPrice:5320,total:133000},{name:'Height-Adj Desk',qty:10,unitPrice:6720,total:67200}] },
+    { id:'QUOT-002', rfq:'RFQ-017', rfqTitle:'Steel Rods FE550', vendor:'Delta Logistics', date:'2026-05-25', amount:5250000, gstPct:18, delivery:10, payment:'Net 60 days', status:'submitted', notes:'SAIL-certified Fe550D, all sizes available.', items:[{name:'Fe550D TMT Steel Rod',qty:50000,unitPrice:105,total:5250000}] },
+    { id:'QUOT-001', rfq:'RFQ-022', rfqTitle:'Stationery Supplies', vendor:'Infra Supplies Pvt Ltd', date:'2026-05-24', amount:78500, gstPct:12, delivery:4, payment:'On Delivery', status:'accepted', notes:'Best price stationery bundle. Free delivery.', items:[{name:'A4 Paper (500 sheets)',qty:200,unitPrice:260,total:52000},{name:'Pen Set',qty:300,unitPrice:60,total:18000},{name:'Folders',qty:100,unitPrice:85,total:8500}] },
+  ];
+
+  let currentFilter = 'all';
+  let searchTerm    = '';
+  let currentPage   = 1;
+  const PER_PAGE    = 8;
+  let quotRowCount  = 0;
+
+  /* ── RENDER TABLE ───────────────────────────────── */
+  function renderTable() {
+    let data = QUOTATIONS.filter(q => {
+      const mf = currentFilter === 'all' || q.status === currentFilter;
+      const ms = !searchTerm ||
+        q.id.toLowerCase().includes(searchTerm) ||
+        q.rfqTitle.toLowerCase().includes(searchTerm) ||
+        q.vendor.toLowerCase().includes(searchTerm) ||
+        q.rfq.toLowerCase().includes(searchTerm);
+      return mf && ms;
+    });
+
+    const sv = document.getElementById('sort-sel').value;
+    if (sv==='date-asc')    data.sort((a,b)=>a.date.localeCompare(b.date));
+    if (sv==='date-desc')   data.sort((a,b)=>b.date.localeCompare(a.date));
+    if (sv==='amount-desc') data.sort((a,b)=>b.amount-a.amount);
+    if (sv==='amount-asc')  data.sort((a,b)=>a.amount-b.amount);
+
+    const total  = data.length;
+    const start  = (currentPage-1)*PER_PAGE;
+    const slice  = data.slice(start, start+PER_PAGE);
+    const tbody  = document.getElementById('quot-tbody');
+    const empty  = document.getElementById('empty-state');
+    const pagRow = document.getElementById('pag-row');
+
+    tbody.innerHTML = '';
+    if (!slice.length) { empty.style.display='block'; pagRow.style.display='none'; return; }
+    empty.style.display='none'; pagRow.style.display='flex';
+
+    slice.forEach(q => {
+      const statusLabel = { draft:'Draft', submitted:'Submitted', 'under-review':'Under Review', accepted:'Accepted', rejected:'Rejected', won:'Won' }[q.status] || q.status;
+      const dateStr = new Date(q.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+      const amt = '₹' + q.amount.toLocaleString('en-IN');
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td><span class="quot-id">${q.id}</span></td>
+          <td><div class="rfq-cell"><div class="rfq-ref">${q.rfq}</div><div class="rfq-sub">${q.rfqTitle}</div></div></td>
+          <td><span class="vendor-chip-sm"><i class="fas fa-store" style="font-size:.65rem;"></i>${q.vendor}</span></td>
+          <td>${dateStr}</td>
+          <td><div class="amount-cell">${amt}<br><small>+GST ${q.gstPct}%</small></div></td>
+          <td>${q.delivery} days</td>
+          <td><span class="badge-status ${q.status}">${statusLabel}</span></td>
+          <td>
+            <div class="row-actions">
+              <div class="row-btn success" title="View" onclick='openViewModal(${JSON.stringify(q)})'><i class="fas fa-eye"></i></div>
+              <div class="row-btn" title="Edit" onclick="showToast('Edit coming soon!','info')"><i class="fas fa-pen"></i></div>
+              <div class="row-btn danger" title="Delete" onclick="deleteQuot('${q.id}')"><i class="fas fa-trash-can"></i></div>
+            </div>
+          </td>
+        </tr>`);
+    });
+
+    document.getElementById('pag-info').textContent =
+      `Showing ${start+1}–${Math.min(start+slice.length,total)} of ${total} results`;
+    const tp = Math.ceil(total/PER_PAGE);
+    [1,2].forEach(n=>{
+      const b=document.getElementById('pb-'+n);
+      if(b){ b.style.display=n<=tp?'flex':'none'; b.classList.toggle('active',n===currentPage); }
+    });
+  }
+
+  function filterTable(v){ searchTerm=v.toLowerCase().trim(); currentPage=1; renderTable(); }
+  function setFilter(f,el){ currentFilter=f; currentPage=1; document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderTable(); }
+  function changePage(d){ const tp=Math.ceil(QUOTATIONS.length/PER_PAGE); currentPage=Math.max(1,Math.min(tp,currentPage+d)); renderTable(); }
+  function gotoPage(n){ currentPage=n; renderTable(); }
+  function deleteQuot(id){ QUOTATIONS=QUOTATIONS.filter(q=>q.id!==id); renderTable(); showToast(`Quotation ${id} deleted.`,'error'); }
+
+  /* ── SUBMIT PANEL ───────────────────────────────── */
+  function toggleSubmitPanel(){
+    const p=document.getElementById('submit-panel');
+    if(p.style.display==='none'){ p.style.display='block'; p.scrollIntoView({behavior:'smooth',block:'start'}); if(!quotRowCount){addQuotRow();addQuotRow();} }
+    else p.style.display='none';
+  }
+
+  function onRFQSelect(sel){
+    const meta=RFQ_META[sel.value];
+    const banner=document.getElementById('rfq-summary-banner');
+    if(meta){
+      document.getElementById('rfq-banner-title').textContent=sel.value+' · '+meta.title;
+      document.getElementById('rfq-banner-cat').textContent=meta.category;
+      document.getElementById('rfq-banner-dl').textContent=meta.deadline;
+      document.getElementById('rfq-banner-pri').textContent=meta.priority;
+      document.getElementById('panel-rfq-label').textContent='Quoting against '+sel.value+' – '+meta.title;
+      banner.style.display='flex';
+    } else { banner.style.display='none'; document.getElementById('panel-rfq-label').textContent='Select an RFQ to quote against'; }
+  }
+
+  function addQuotRow(){
+    quotRowCount++;
+    const n=quotRowCount;
+    document.getElementById('quot-items-tbody').insertAdjacentHTML('beforeend',`
+      <tr id="qr-${n}">
+        <td style="text-align:center;width:30px;color:#9097a5;font-size:.8rem;">${n}</td>
+        <td><input type="text" id="qi-name-${n}" placeholder="Item name" oninput="recalcTotals()"/></td>
+        <td><input type="number" id="qi-qty-${n}"  placeholder="1"  min="1" style="width:60px;" oninput="recalcTotals()"/></td>
+        <td><input type="number" id="qi-up-${n}"   placeholder="0"  min="0" oninput="recalcTotals()"/></td>
+        <td class="total-cell" id="qi-tot-${n}">₹0</td>
+        <td><input type="number" id="qi-del-${n}"  placeholder="7"  min="1" style="width:60px;"/></td>
+        <td style="text-align:center;"><span style="cursor:pointer;color:#ef4444;font-size:.8rem;" onclick="removeQuotRow(${n})"><i class="fas fa-trash-can"></i></span></td>
+      </tr>`);
+  }
+
+  function removeQuotRow(n){ const r=document.getElementById('qr-'+n); if(r)r.remove(); recalcTotals(); }
+
+  function recalcTotals(){
+    let subtotal=0;
+    for(let i=1;i<=quotRowCount;i++){
+      const qEl=document.getElementById('qi-qty-'+i);
+      const uEl=document.getElementById('qi-up-'+i);
+      const tEl=document.getElementById('qi-tot-'+i);
+      if(!qEl||!uEl||!tEl)continue;
+      const qty=parseFloat(qEl.value)||0;
+      const up =parseFloat(uEl.value)||0;
+      const tot=qty*up;
+      subtotal+=tot;
+      tEl.textContent='₹'+tot.toLocaleString('en-IN');
+    }
+    const gstPct=parseFloat(document.getElementById('quot-gst').value)||0;
+    const gstAmt=subtotal*gstPct/100;
+    const grand=subtotal+gstAmt;
+    document.getElementById('tot-subtotal').textContent='₹'+subtotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+    document.getElementById('tot-gst').textContent='₹'+gstAmt.toLocaleString('en-IN',{minimumFractionDigits:2});
+    document.getElementById('tot-grand').textContent='₹'+grand.toLocaleString('en-IN',{minimumFractionDigits:2});
+    document.getElementById('tot-gst-pct').textContent=gstPct;
+  }
+
+  function saveDraftQuot(){
+    const rfqSel=document.getElementById('sel-rfq').value;
+    const vendor=document.getElementById('quot-vendor').value.trim();
+    if(!rfqSel||!vendor){ showPanelAlert('Please select an RFQ and enter vendor name.','error'); return; }
+    const meta=RFQ_META[rfqSel]||{};
+    let subtotal=0;
+    for(let i=1;i<=quotRowCount;i++){
+      const q=document.getElementById('qi-qty-'+i), u=document.getElementById('qi-up-'+i);
+      if(q&&u) subtotal+=(parseFloat(q.value)||0)*(parseFloat(u.value)||0);
+    }
+    const newQ={
+      id:'QUOT-0'+String(Date.now()).slice(-3),
+      rfq:rfqSel, rfqTitle:meta.title||'', vendor,
+      date:new Date().toISOString().slice(0,10),
+      amount:subtotal,
+      gstPct:parseFloat(document.getElementById('quot-gst').value)||18,
+      delivery:7, payment:document.getElementById('quot-payment').value,
+      status:'draft', notes:document.getElementById('quot-notes').value||'–',
+      items:[]
+    };
+    QUOTATIONS.unshift(newQ); renderTable();
+    document.getElementById('submit-panel').style.display='none';
+    showToast('Draft saved: '+newQ.id,'info');
+  }
+
+  function submitQuotation(){
+    const rfqSel=document.getElementById('sel-rfq').value;
+    const vendor=document.getElementById('quot-vendor').value.trim();
+    if(!rfqSel){ showPanelAlert('Please select an RFQ.','error'); return; }
+    if(!vendor){ showPanelAlert('Please enter vendor / company name.','error'); return; }
+    let subtotal=0, items=[];
+    for(let i=1;i<=quotRowCount;i++){
+      const n=document.getElementById('qi-name-'+i),q=document.getElementById('qi-qty-'+i),u=document.getElementById('qi-up-'+i);
+      if(n&&q&&u&&n.value.trim()){
+        const qty=parseFloat(q.value)||0,up=parseFloat(u.value)||0,tot=qty*up;
+        subtotal+=tot;
+        items.push({name:n.value.trim(),qty,unitPrice:up,total:tot});
+      }
+    }
+    if(!items.length){ showPanelAlert('Add at least one line item.','error'); return; }
+    const gstPct=parseFloat(document.getElementById('quot-gst').value)||18;
+    const grand=subtotal+(subtotal*gstPct/100);
+    const meta=RFQ_META[rfqSel]||{};
+    const newQ={
+      id:'QUOT-0'+String(Date.now()).slice(-3),
+      rfq:rfqSel, rfqTitle:meta.title||'', vendor,
+      date:new Date().toISOString().slice(0,10),
+      amount:grand, gstPct,
+      delivery:parseFloat(document.getElementById('qi-del-1')?document.getElementById('qi-del-1').value:7)||7,
+      payment:document.getElementById('quot-payment').value,
+      status:'submitted', notes:document.getElementById('quot-notes').value||'–', items
+    };
+    QUOTATIONS.unshift(newQ); renderTable();
+    document.getElementById('submit-panel').style.display='none';
+    quotRowCount=0;
+    showToast('🎉 Quotation '+newQ.id+' submitted successfully!','success');
+  }
+
+  function showPanelAlert(msg,type='error'){
+    const icons={error:'fa-circle-exclamation',success:'fa-circle-check',info:'fa-circle-info'};
+    document.getElementById('panel-alert').innerHTML=
+      `<div class="vb-alert ${type}" style="margin:0;"><i class="fas ${icons[type]}"></i>${msg}</div>`;
+    setTimeout(()=>document.getElementById('panel-alert').innerHTML='',4000);
+  }
+
+  /* ── VIEW MODAL ─────────────────────────────────── */
+  function openViewModal(q){
+    document.getElementById('view-quot-id').textContent=q.id;
+    document.getElementById('view-rfq-ref').textContent=q.rfq+' · '+q.rfqTitle;
+    document.getElementById('v-vendor').textContent=q.vendor;
+    const statusLabel={draft:'Draft',submitted:'Submitted','under-review':'Under Review',accepted:'Accepted',rejected:'Rejected',won:'Won'}[q.status]||q.status;
+    document.getElementById('v-status-badge').innerHTML=`<span class="badge-status ${q.status}">${statusLabel}</span>`;
+    document.getElementById('v-date').textContent=new Date(q.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('v-delivery').textContent=q.delivery+' days';
+    document.getElementById('v-gst').textContent=q.gstPct+'%';
+    document.getElementById('v-payment').textContent=q.payment;
+    document.getElementById('v-notes').textContent=q.notes||'–';
+    const tbody=document.getElementById('view-items-tbody');
+    tbody.innerHTML='';
+    (q.items||[]).forEach((item,i)=>{
+      tbody.insertAdjacentHTML('beforeend',`
+        <tr>
+          <td style="text-align:center;color:#9097a5;font-size:.8rem;">${i+1}</td>
+          <td style="font-weight:500;">${item.name}</td>
+          <td>${item.qty}</td>
+          <td>₹${item.unitPrice.toLocaleString('en-IN')}</td>
+          <td style="font-weight:700;color:var(--vb-purple);">₹${item.total.toLocaleString('en-IN')}</td>
+        </tr>`);
+    });
+    const sub=q.amount/(1+q.gstPct/100);
+    const gst=q.amount-sub;
+    document.getElementById('v-subtotal').textContent='₹'+sub.toLocaleString('en-IN',{maximumFractionDigits:0});
+    document.getElementById('v-gst-amt').textContent='₹'+gst.toLocaleString('en-IN',{maximumFractionDigits:0});
+    document.getElementById('v-grand').textContent='₹'+q.amount.toLocaleString('en-IN');
+    document.getElementById('view-modal').classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeViewModal(){ document.getElementById('view-modal').classList.remove('open'); document.body.style.overflow=''; }
+  document.getElementById('view-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('view-modal'))closeViewModal(); });
+
+  /* ── COMPARE MODAL ──────────────────────────────── */
+  function openCompareModal(){ document.getElementById('compare-modal').classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeCompareModal(){ document.getElementById('compare-modal').classList.remove('open'); document.body.style.overflow=''; }
+  document.getElementById('compare-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('compare-modal'))closeCompareModal(); });
+
+  /* ── TOAST ──────────────────────────────────────── */
+  function showToast(msg,type='success'){
+    const icons={success:'fa-circle-check',error:'fa-circle-exclamation',info:'fa-circle-info'};
+    const colors={success:'#22c55e',error:'#ef4444',info:'var(--vb-blue)'};
+    const t=document.createElement('div');
+    t.style.cssText=`background:#fff;border:1px solid #eaecf4;border-radius:12px;padding:12px 16px;
+      display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);
+      font-size:.84rem;color:#1a1d2e;min-width:260px;max-width:360px;
+      animation:fadeInUp .3s ease;font-family:'DM Sans',sans-serif;`;
+    t.innerHTML=`<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
+      <span style="flex:1;">${msg}</span>
+      <span style="cursor:pointer;color:#b0b7c8;font-size:.8rem;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},4200);
+  }
+
+  /* ── SIDEBAR TOGGLE (mobile) ────────────────────── */
+  function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('mobile-open'); }
+  function handleResize(){ const hb=document.getElementById('hamburger-btn'); hb.style.display=window.innerWidth<=900?'block':'none'; if(window.innerWidth>900)document.getElementById('sidebar').classList.remove('mobile-open'); }
+  window.addEventListener('resize',handleResize); handleResize();
+
+  /* ── INIT ───────────────────────────────────────── */
+  renderTable();
+</script>
+</body>
+</html>

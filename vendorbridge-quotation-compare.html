@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendorBridge – Quotation Comparison</title>
+  <meta name="description" content="VendorBridge Quotation Comparison – compare vendor quotes side-by-side and select the best offer."/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--vb-purple:#6f42c1;--vb-blue:#0d6efd;--vb-teal:#20c997;--vb-orange:#fd7e14;--vb-indigo:#6610f2;--vb-green:#22c55e;--vb-red:#ef4444;--vb-grad-main:linear-gradient(135deg,var(--vb-purple) 0%,var(--vb-blue) 60%,var(--vb-teal) 100%);--vb-grad-btn:linear-gradient(45deg,var(--vb-purple),var(--vb-blue));--vb-grad-btn-h:linear-gradient(45deg,var(--vb-indigo),var(--vb-purple));--vb-shadow:0 8px 32px rgba(111,66,193,.18);--vb-shadow-lg:0 20px 60px rgba(111,66,193,.22);--sidebar-w:240px;--topbar-h:64px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f4f5fb;min-height:100vh;display:flex;overflow-x:hidden;color:#1a1d2e}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(111,66,193,.25);border-radius:4px}
+
+    /* SIDEBAR */
+    .sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid #eaecf4;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s ease}
+    .sidebar-brand{display:flex;align-items:center;gap:12px;padding:20px 20px 18px;border-bottom:1px solid #eaecf4}
+    .sidebar-brand .logo-icon{width:38px;height:38px;background:var(--vb-grad-btn);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(111,66,193,.35)}
+    .sidebar-brand .logo-icon i{color:#fff;font-size:1rem}
+    .sidebar-brand .logo-text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.15rem;color:#1a1d2e;letter-spacing:-.3px}
+    .sidebar-brand .logo-text span{font-weight:400;color:#6f42c1}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+    .nav-label{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0b7c8;padding:8px 10px 4px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;cursor:pointer;text-decoration:none;color:#6b7490;font-size:.875rem;font-weight:500;transition:all .22s;margin-bottom:2px;position:relative}
+    .nav-item i{width:18px;text-align:center;font-size:.9rem}
+    .nav-item:hover{background:rgba(111,66,193,.06);color:var(--vb-purple)}
+    .nav-item.active{background:rgba(111,66,193,.1);color:var(--vb-purple);font-weight:600}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--vb-grad-btn);border-radius:0 3px 3px 0}
+    .nav-badge{margin-left:auto;background:var(--vb-grad-btn);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-badge.red{background:#ef4444}
+    .sidebar-user{padding:14px 16px;border-top:1px solid #eaecf4;display:flex;align-items:center;gap:10px}
+    .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--vb-grad-main);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
+    .user-info{flex:1;min-width:0}.user-info .uname{font-size:.82rem;font-weight:600;color:#1a1d2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user-info .urole{font-size:.7rem;color:#9097a5}
+    .user-cog{color:#b0b7c8;cursor:pointer;font-size:.85rem;transition:color .2s}.user-cog:hover{color:var(--vb-purple)}
+
+    /* TOPBAR */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:#fff;border-bottom:1px solid #eaecf4;display:flex;align-items:center;padding:0 28px;gap:16px;z-index:100}
+    .topbar-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1.05rem;color:#1a1d2e;flex:1}
+    .topbar-title span{color:#b0b7c8;font-weight:400}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .topbar-icon-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7490;font-size:.9rem;transition:all .22s;position:relative;text-decoration:none}
+    .topbar-icon-btn:hover{border-color:var(--vb-purple);color:var(--vb-purple);background:rgba(111,66,193,.04)}
+    .notif-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;position:absolute;top:5px;right:5px;border:2px solid #fff}
+
+    /* MAIN */
+    .main-content{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);min-height:100vh;flex:1;display:flex;flex-direction:column}
+    .page-body{padding:28px 32px;flex:1}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .page-header h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1d2e;margin:0}
+    .page-header p{font-size:.88rem;color:#8a909e;margin:2px 0 0}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* BUTTONS */
+    .btn-vb-primary{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:var(--vb-grad-btn);color:#fff;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .3s;box-shadow:0 4px 18px rgba(111,66,193,.3);letter-spacing:.2px;text-decoration:none}
+    .btn-vb-primary:hover{background:var(--vb-grad-btn-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(111,66,193,.4);color:#fff}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:transparent;color:var(--vb-purple);border:1.5px solid rgba(111,66,193,.35);border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .25s;text-decoration:none}
+    .btn-outline:hover{background:rgba(111,66,193,.06);border-color:var(--vb-purple);color:var(--vb-purple)}
+    .btn-success{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:linear-gradient(45deg,#16a34a,#22c55e);color:#fff;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .3s;box-shadow:0 4px 14px rgba(34,197,94,.3);text-decoration:none}
+    .btn-success:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(34,197,94,.4);color:#fff}
+    .btn-sm{padding:7px 16px;font-size:.8rem;border-radius:8px}
+
+    /* STATS */
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:#fff;border-radius:14px;padding:16px 18px;border:1px solid #eaecf4;display:flex;align-items:center;gap:12px;transition:box-shadow .25s}
+    .stat-card:hover{box-shadow:var(--vb-shadow)}
+    .stat-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .stat-icon.purple{background:rgba(111,66,193,.1);color:var(--vb-purple)}.stat-icon.blue{background:rgba(13,110,253,.1);color:var(--vb-blue)}.stat-icon.teal{background:rgba(32,201,151,.1);color:var(--vb-teal)}.stat-icon.green{background:rgba(34,197,94,.1);color:var(--vb-green)}
+    .stat-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.35rem;font-weight:800;color:#1a1d2e;line-height:1}
+    .stat-lbl{font-size:.73rem;color:#9097a5;margin-top:3px}
+
+    /* RFQ SELECTOR */
+    .rfq-selector-card{background:#fff;border:1px solid #eaecf4;border-radius:16px;padding:20px 24px;margin-bottom:22px;box-shadow:0 2px 12px rgba(111,66,193,.06)}
+    .rfq-selector-card h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:.95rem;font-weight:700;color:#1a1d2e;margin-bottom:14px}
+    .rfq-select-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+    .rfq-select-row .fg{flex:1;min-width:180px}
+    .fg label{font-size:.8rem;font-weight:600;color:#4a5068;margin-bottom:6px;display:block;font-family:'Plus Jakarta Sans',sans-serif}
+    .iw{position:relative}
+    .iw .fi{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#b0b7c8;font-size:.85rem;pointer-events:none}
+    .iw select,.iw input{width:100%;padding:10px 13px 10px 38px;border:1.5px solid #e3e6ef;border-radius:10px;font-size:.88rem;font-family:'DM Sans',sans-serif;color:#1a1d2e;background:#fafbfe;transition:all .25s;outline:none;-webkit-appearance:none}
+    .iw select:focus,.iw input:focus{border-color:var(--vb-purple);background:#fff;box-shadow:0 0 0 3.5px rgba(111,66,193,.1)}
+
+    /* DECISION PANEL */
+    .decision-panel{background:linear-gradient(135deg,rgba(32,201,151,.06),rgba(13,110,253,.06));border:1.5px solid rgba(32,201,151,.2);border-radius:16px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+    .decision-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--vb-teal),var(--vb-blue));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;flex-shrink:0;box-shadow:0 6px 18px rgba(32,201,151,.35)}
+    .decision-text{flex:1;min-width:200px}
+    .decision-text h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:800;color:#1a1d2e;margin:0 0 4px}
+    .decision-text p{font-size:.84rem;color:#6b7490;margin:0}
+    .decision-text p strong{color:var(--vb-teal)}
+    .decision-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* SCORE SECTION */
+    .score-section{background:#fff;border:1px solid #eaecf4;border-radius:14px;padding:20px 24px;margin-bottom:22px;box-shadow:0 2px 10px rgba(111,66,193,.05)}
+    .score-section h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:.9rem;font-weight:800;color:#1a1d2e;margin-bottom:16px}
+    .score-group{margin-bottom:14px}
+    .score-group-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#b0b7c8;margin-bottom:8px}
+    .score-row{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+    .score-label{font-size:.81rem;font-weight:500;color:#4a5068;width:170px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .score-bar-wrap{flex:1;background:#f0f2f7;border-radius:20px;height:8px;overflow:hidden}
+    .score-bar{height:100%;border-radius:20px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+    .score-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.8rem;width:36px;text-align:right;flex-shrink:0}
+
+    /* INSIGHTS */
+    .insights-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+    .insight-card{background:#fff;border:1px solid #eaecf4;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(111,66,193,.05);position:relative;overflow:hidden}
+    .insight-card::before{content:'';position:absolute;top:-24px;right:-24px;width:80px;height:80px;border-radius:50%;background:rgba(111,66,193,.04)}
+    .ic-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;margin-bottom:12px}
+    .ic-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#b0b7c8;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:6px}
+    .ic-value{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.25rem;font-weight:800;color:#1a1d2e;margin-bottom:3px}
+    .ic-sub{font-size:.77rem;color:#9097a5}
+
+    /* COMPARE TABLE */
+    .compare-wrapper{background:#fff;border-radius:16px;border:1px solid #eaecf4;overflow:hidden;margin-bottom:28px;box-shadow:0 2px 14px rgba(111,66,193,.07)}
+    .compare-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #eaecf4;background:linear-gradient(135deg,rgba(111,66,193,.03),rgba(13,110,253,.02));flex-wrap:wrap;gap:10px}
+    .compare-header h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:800;color:#1a1d2e;margin:0}
+    .compare-header p{font-size:.8rem;color:#9097a5;margin:3px 0 0}
+    .compare-scroll{overflow-x:auto}
+    .cmp-table{width:100%;border-collapse:collapse;min-width:680px}
+    .cmp-table .crit-col{width:155px;background:#fafbfe;border-right:2px solid #eaecf4}
+    .cmp-table thead th{padding:0;border-bottom:2px solid #eaecf4;vertical-align:bottom}
+    .cmp-table thead th.crit-col{padding:12px 16px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#9097a5}
+    .vendor-th{text-align:center}
+    .vendor-th-inner{padding:16px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative}
+    .vendor-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:.88rem;color:#fff;flex-shrink:0}
+    .vendor-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;font-weight:700;color:#1a1d2e;text-align:center;line-height:1.3}
+    .vendor-quot-id{font-size:.68rem;color:#9097a5}
+    .winner-crown{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:1rem}
+    .winner-col{background:linear-gradient(180deg,rgba(32,201,151,.05),rgba(32,201,151,.01))}
+    .winner-col .vendor-th-inner{border-bottom:3px solid var(--vb-teal)}
+    .winner-badge{background:rgba(32,201,151,.15);color:var(--vb-teal);border:1px solid rgba(32,201,151,.3);border-radius:20px;padding:2px 9px;font-size:.66rem;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif}
+    .cmp-table tbody tr{border-bottom:1px solid #f0f2f7;transition:background .15s}
+    .cmp-table tbody tr:last-child{border-bottom:none}
+    .cmp-table tbody tr:hover td{background:rgba(111,66,193,.02)}
+    .cmp-table tbody tr:hover td.crit-col{background:#f4f5fb}
+    .cmp-table tbody td{padding:12px 14px;font-size:.84rem;color:#4a5068;text-align:center;vertical-align:middle}
+    .cmp-table tbody td.crit-col{text-align:left;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.79rem;color:#6b7490;background:#fafbfe;border-right:2px solid #eaecf4}
+    .crit-icon{margin-right:7px;color:#b0b7c8;font-size:.76rem}
+    .section-row td{background:linear-gradient(90deg,rgba(111,66,193,.07),rgba(13,110,253,.04))!important;font-family:'Plus Jakarta Sans',sans-serif;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--vb-purple)!important;padding:7px 14px!important;border-bottom:1px solid rgba(111,66,193,.12)}
+    .cell-best{font-weight:700;color:var(--vb-teal);background:rgba(32,201,151,.07)!important}
+    .cell-best::after{content:' ✓';font-size:.7rem;opacity:.85}
+    .cell-worst{color:var(--vb-red)}
+    .rating-stars{display:inline-flex;gap:2px;font-size:.72rem}
+    .star-f{color:#f59e0b}.star-e{color:#e2e8f0}
+    .cmp-table tfoot td{padding:12px 10px;border-top:2px solid #eaecf4;text-align:center;background:#fafbfe}
+    .cmp-table tfoot td.crit-col{background:#f4f5fb}
+
+    /* BADGES */
+    .badge-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif}
+    .badge-teal{background:rgba(32,201,151,.1);color:var(--vb-teal)}
+
+    /* MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,30,.52);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex;animation:fadeInUp .3s ease}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .modal-box{background:#fff;border-radius:20px;width:92%;max-width:500px;box-shadow:var(--vb-shadow-lg);animation:fadeInUp .35s ease;overflow:hidden}
+    .modal-header{display:flex;align-items:center;gap:14px;padding:20px 24px 16px;border-bottom:1px solid #eaecf4}
+    .modal-header-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .modal-header h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.05rem;font-weight:800;color:#1a1d2e;margin:0}
+    .modal-header p{font-size:.78rem;color:#9097a5;margin:2px 0 0}
+    .modal-close-btn{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9097a5;font-size:.85rem;transition:all .22s}
+    .modal-close-btn:hover{border-color:#ef4444;color:#ef4444}
+    .modal-body{padding:20px 24px}
+    .modal-footer-btns{display:flex;gap:10px;padding:14px 24px;border-top:1px solid #eaecf4;justify-content:flex-end}
+    .confirm-vendor-card{background:linear-gradient(135deg,rgba(32,201,151,.07),rgba(13,110,253,.05));border:1.5px solid rgba(32,201,151,.2);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+    .cv-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:.88rem;color:#fff;flex-shrink:0}
+    .cv-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#1a1d2e;font-size:.92rem}
+    .cv-amount{font-size:.8rem;color:var(--vb-teal);font-weight:600;margin-top:2px}
+    .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f2f7;font-size:.83rem}
+    .detail-row:last-child{border-bottom:none}
+    .detail-row span:first-child{color:#9097a5}
+    .detail-row span:last-child{font-weight:600;color:#1a1d2e}
+
+    /* TOAST */
+    #toast-container{position:fixed;bottom:26px;right:26px;z-index:99999;display:flex;flex-direction:column;gap:10px}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){.sidebar{transform:translateX(-100%)}.sidebar.mobile-open{transform:translateX(0)}.main-content{margin-left:0}.topbar{left:0}.stats-strip{grid-template-columns:repeat(2,1fr)}.insights-grid{grid-template-columns:1fr 1fr}#hamburger-btn{display:block!important}}
+    @media(max-width:640px){.stats-strip{grid-template-columns:1fr 1fr}.insights-grid{grid-template-columns:1fr}.decision-panel{flex-direction:column;align-items:flex-start}.page-body{padding:18px 16px}}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon"><i class="fas fa-link"></i></div>
+    <div class="logo-text">Vendor<span>Bridge</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="vendorbridge-dashboard.html"          class="nav-item" id="nav-dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a href="vendorbridge-vendors.html"            class="nav-item" id="nav-vendors"><i class="fas fa-store"></i> Vendors</a>
+    <a href="vendorbridge-rfq.html"               class="nav-item" id="nav-rfq"><i class="fas fa-file-invoice"></i> RFQ's <span class="nav-badge">8</span></a>
+    <a href="vendorbridge-quotations.html"        class="nav-item" id="nav-quotations"><i class="fas fa-file-circle-check"></i> Quotations <span class="nav-badge">12</span></a>
+    <a href="vendorbridge-quotation-compare.html" class="nav-item active" id="nav-compare"><i class="fas fa-scale-balanced"></i> Compare Quotes</a>
+    <a href="vendorbridge-approvals.html"         class="nav-item" id="nav-approvals"><i class="fas fa-check-double"></i> Approvals <span class="nav-badge red">3</span></a>
+    <div class="nav-label" style="margin-top:12px;">Procurement</div>
+    <a href="vendorbridge-purchase-orders-invoices.html" class="nav-item" id="nav-po"><i class="fas fa-cart-flatbed"></i> Purchase Orders &amp; Invoices</a>
+    <a href="vendorbridge-reports.html"           class="nav-item" id="nav-rep"><i class="fas fa-chart-bar"></i> Reports</a>
+    <div class="nav-label" style="margin-top:12px;">System</div>
+    <a href="vendorbridge-activity.html"          class="nav-item" id="nav-act"><i class="fas fa-bolt"></i> Activity</a>
+    <a href="#"                                   class="nav-item" id="nav-settings"><i class="fas fa-gear"></i> Settings</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar">PS</div>
+    <div class="user-info"><div class="uname">Procurement User</div><div class="urole">Procurement Officer</div></div>
+    <i class="fas fa-right-from-bracket user-cog" title="Logout" onclick="window.location.href='vendorbridge-auth.html'"></i>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button id="hamburger-btn" style="display:none;background:none;border:none;font-size:1.2rem;color:#6b7490;cursor:pointer;margin-right:8px;" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <div class="topbar-title">Compare Quotes &nbsp;<span>/ Side-by-Side Analysis</span></div>
+  <div class="topbar-actions">
+    <div class="topbar-icon-btn" title="Notifications" onclick="showToast('3 pending approvals require attention.','info')"><i class="fas fa-bell"></i><span class="notif-dot"></span></div>
+    <div class="topbar-icon-btn" title="Print" onclick="window.print()"><i class="fas fa-print"></i></div>
+    <div class="topbar-icon-btn" title="Help"><i class="fas fa-circle-question"></i></div>
+    <a href="vendorbridge-auth.html" class="topbar-icon-btn" title="Sign Out"><i class="fas fa-right-from-bracket"></i></a>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main-content">
+  <div class="page-body">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1>Quotation Comparison</h1>
+        <p>Compare vendor quotes side-by-side and select the best offer for approval</p>
+      </div>
+      <div class="header-actions">
+        <a href="vendorbridge-quotations.html" class="btn-outline"><i class="fas fa-arrow-left"></i> Back to Quotations</a>
+        <button class="btn-vb-primary" onclick="exportReport()"><i class="fas fa-file-export"></i> Export Report</button>
+      </div>
+    </div>
+
+    <!-- RFQ Selector -->
+    <div class="rfq-selector-card">
+      <h2><i class="fas fa-filter" style="color:var(--vb-purple);margin-right:8px;"></i>Select RFQ to Compare</h2>
+      <div class="rfq-select-row">
+        <div class="fg">
+          <label>RFQ Reference</label>
+          <div class="iw">
+            <select id="rfq-select" onchange="loadComparison(this.value)">
+              <option value="RFQ-024">RFQ-024 · Office Furniture (3 quotes)</option>
+              <option value="RFQ-023">RFQ-023 · Laptop Refresh Q3 (2 quotes)</option>
+              <option value="RFQ-022">RFQ-022 · Stationery &amp; Supplies (3 quotes)</option>
+              <option value="RFQ-017">RFQ-017 · Steel Rods FE550 (2 quotes)</option>
+            </select>
+            <i class="fas fa-file-invoice fi"></i>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Rank By</label>
+          <div class="iw">
+            <select id="rank-by">
+              <option value="price">Lowest Price</option>
+              <option value="delivery">Fastest Delivery</option>
+              <option value="rating">Best Rating</option>
+            </select>
+            <i class="fas fa-sort fi"></i>
+          </div>
+        </div>
+        <button class="btn-vb-primary btn-sm" style="height:42px;margin-top:22px;flex-shrink:0;" onclick="loadComparison(document.getElementById('rfq-select').value)">
+          <i class="fas fa-magnifying-glass-chart"></i> Load
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip">
+      <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-file-circle-check"></i></div><div><div class="stat-num" id="st-quotes">3</div><div class="stat-lbl">Quotes Received</div></div></div>
+      <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-indian-rupee-sign"></i></div><div><div class="stat-num" id="st-savings">₹21K</div><div class="stat-lbl">Potential Savings</div></div></div>
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-trophy"></i></div><div><div class="stat-num" id="st-winner">Alpha Int.</div><div class="stat-lbl">Recommended Vendor</div></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-calendar-check"></i></div><div><div class="stat-num" id="st-deadline">18 Jun</div><div class="stat-lbl">RFQ Deadline</div></div></div>
+    </div>
+
+    <!-- Decision Banner -->
+    <div class="decision-panel">
+      <div class="decision-icon"><i class="fas fa-trophy"></i></div>
+      <div class="decision-text">
+        <h3 id="dp-title">Recommended: Alpha Interiors</h3>
+        <p id="dp-sub">Lowest price at <strong id="dp-price">₹2,00,200</strong> · Fastest delivery (5 days) · Highest vendor rating (4.8/5)</p>
+      </div>
+      <div class="decision-actions">
+        <button class="btn-success" onclick="openApprovalModal()"><i class="fas fa-circle-check"></i> Approve &amp; Create PO</button>
+        <button class="btn-outline" onclick="showToast('Comparison saved!','info')"><i class="fas fa-bookmark"></i> Save</button>
+      </div>
+    </div>
+
+    <!-- Score Overview -->
+    <div class="score-section">
+      <h3><i class="fas fa-chart-bar" style="color:var(--vb-purple);margin-right:8px;"></i>Score Breakdown</h3>
+      <div id="score-rows"></div>
+    </div>
+
+    <!-- Insights -->
+    <div class="insights-grid" id="insights-grid"></div>
+
+    <!-- Comparison Table -->
+    <div class="compare-wrapper">
+      <div class="compare-header">
+        <div>
+          <h2 id="cmp-title">RFQ-024 · Office Furniture – 2nd Floor Expansion</h2>
+          <p id="cmp-sub">3 quotations received · Deadline: 18 Jun 2026 · Category: Furniture</p>
+        </div>
+        <span class="badge-pill badge-teal"><i class="fas fa-info-circle" style="margin-right:4px;"></i>Green = Best Value</span>
+      </div>
+      <div class="compare-scroll">
+        <table class="cmp-table" id="cmp-table"></table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- APPROVAL MODAL -->
+<div class="modal-overlay" id="approval-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-icon" style="background:rgba(34,197,94,.1);color:var(--vb-green);"><i class="fas fa-circle-check"></i></div>
+      <div><h2>Confirm Approval</h2><p>Create Purchase Order from this quotation</p></div>
+      <button class="modal-close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-vendor-card">
+        <div class="cv-avatar" id="m-avatar" style="background:linear-gradient(135deg,#20c997,#0d6efd);">AI</div>
+        <div><div class="cv-name" id="m-vendor">Alpha Interiors</div><div class="cv-amount" id="m-amount">Grand Total: ₹2,00,200</div></div>
+        <span class="badge-pill badge-teal" style="margin-left:auto;">✓ Best Value</span>
+      </div>
+      <div class="detail-row"><span>RFQ Reference</span><span id="m-rfq">RFQ-024</span></div>
+      <div class="detail-row"><span>Quotation ID</span><span id="m-quotid">QUOT-003</span></div>
+      <div class="detail-row"><span>Delivery Timeline</span><span id="m-delivery">5 days</span></div>
+      <div class="detail-row"><span>Payment Terms</span><span id="m-payment">Net 15 days</span></div>
+      <div class="detail-row"><span>GST</span><span id="m-gst">18%</span></div>
+      <div class="detail-row" style="border-bottom:none;padding-top:8px;">
+        <span style="font-weight:700;color:#1a1d2e;">Grand Total</span>
+        <span style="font-size:1rem;font-weight:800;color:var(--vb-purple);" id="m-grand">₹2,00,200</span>
+      </div>
+      <div style="margin-top:12px;padding:11px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;font-size:.81rem;color:#166534;">
+        <i class="fas fa-circle-info" style="margin-right:6px;"></i>Approving will generate a PO and notify the vendor.
+      </div>
+    </div>
+    <div class="modal-footer-btns">
+      <button class="btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
+      <button class="btn-success" onclick="confirmApproval()"><i class="fas fa-circle-check"></i> Confirm &amp; Create PO</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ══════════════════ DATA ══════════════════ */
+const DATA = {
+  'RFQ-024':{
+    title:'RFQ-024 · Office Furniture – 2nd Floor Expansion',
+    sub:'3 quotations received · Deadline: 18 Jun 2026 · Category: Furniture',
+    deadline:'18 Jun', savings:'₹21K', winner:'Alpha Int.',
+    dp:{ title:'Recommended: Alpha Interiors', price:'₹2,00,200', sub:'Lowest price · Fastest delivery (5 days) · Highest rating (4.8/5)' },
+    modal:{ vendor:'Alpha Interiors', init:'AI', bg:'linear-gradient(135deg,#20c997,#0d6efd)', amount:'₹2,00,200', rfq:'RFQ-024', quotId:'QUOT-003', delivery:'5 days', payment:'Net 15 days', gst:'18%', grand:'₹2,00,200' },
+    vendors:[
+      { name:'Infra Supplies Pvt Ltd', init:'IS', bg:'linear-gradient(135deg,#6f42c1,#0d6efd)', quotId:'QUOT-012', winner:false },
+      { name:'Timberon LTD',           init:'TL', bg:'linear-gradient(135deg,#fd7e14,#d63384)', quotId:'QUOT-009', winner:false },
+      { name:'Alpha Interiors',        init:'AI', bg:'linear-gradient(135deg,#20c997,#0d6efd)', quotId:'QUOT-003', winner:true  },
+    ],
+    scores:[
+      { label:'Price Score',    v:[72,65,100], c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Delivery Speed', v:[80,55,100], c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Vendor Rating',  v:[90,84,96],  c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Payment Terms',  v:[60,60,80],  c:['#6f42c1','#fd7e14','#20c997'] },
+    ],
+    insights:[
+      { icon:'fas fa-indian-rupee-sign', ib:'rgba(34,197,94,.1)', ic:'#22c55e', label:'Cheapest Quote',   value:'₹2,00,200', sub:'Alpha Interiors — saves ₹21K vs highest' },
+      { icon:'fas fa-truck-fast',        ib:'rgba(13,110,253,.1)', ic:'#0d6efd',label:'Fastest Delivery', value:'5 days',     sub:'Alpha Interiors — 2 days faster than avg' },
+      { icon:'fas fa-star',              ib:'rgba(253,126,20,.1)', ic:'#fd7e14', label:'Best Rated',       value:'4.8 / 5',   sub:'Alpha Interiors — highest vendor score' },
+    ],
+    rows:[
+      { sec:'Pricing' },
+      { crit:'Unit Price (Chair)', icon:'fa-tag',          vals:['₹5,500','₹5,900','₹5,320'], win:2 },
+      { crit:'Unit Price (Desk)',  icon:'fa-tag',          vals:['₹6,900','₹7,375','₹6,720'], win:2 },
+      { crit:'Grand Total (GST)', icon:'fa-receipt',       vals:['₹2,43,670','₹2,61,075','₹2,36,236'], win:2, worst:1 },
+      { sec:'Logistics' },
+      { crit:'Delivery (days)',   icon:'fa-truck',          vals:['7','10','5'], win:2, worst:1 },
+      { crit:'GST %',             icon:'fa-percent',        vals:['18%','18%','18%'], win:-1 },
+      { crit:'Payment Terms',     icon:'fa-calendar-check', vals:['Net 30','Net 30','Net 15'], win:2 },
+      { sec:'Vendor Info' },
+      { crit:'Rating',            icon:'fa-star',           vals:['4.5','4.2','4.8'], win:2, type:'rating' },
+      { crit:'GST Number',        icon:'fa-id-card',        vals:['27ABCDE1234','19FGHIJ5678','27BBBDE5679'], win:-1 },
+      { crit:'Warranty',          icon:'fa-shield-check',   vals:['1 Year','6 Months','1 Year'], win:-1 },
+      { crit:'Installation',      icon:'fa-wrench',         vals:['Included','Extra Cost','Included'], win:-1 },
+    ]
+  },
+  'RFQ-023':{
+    title:'RFQ-023 · Laptop Refresh Q3 2026',
+    sub:'2 quotations received · Deadline: 25 Jun 2026 · Category: IT Equipment',
+    deadline:'25 Jun', savings:'₹12K', winner:'Alpha Int.',
+    dp:{ title:'Recommended: Alpha Interiors', price:'₹9,40,000', sub:'Lower price · Faster delivery · Better warranty terms' },
+    modal:{ vendor:'Alpha Interiors', init:'AI', bg:'linear-gradient(135deg,#20c997,#0d6efd)', amount:'₹9,40,000', rfq:'RFQ-023', quotId:'QUOT-005', delivery:'8 days', payment:'Net 30 days', gst:'18%', grand:'₹11,09,200' },
+    vendors:[
+      { name:'TechStar Solutions', init:'TS', bg:'linear-gradient(135deg,#6f42c1,#0d6efd)', quotId:'QUOT-011', winner:false },
+      { name:'Alpha Interiors',    init:'AI', bg:'linear-gradient(135deg,#20c997,#0d6efd)', quotId:'QUOT-005', winner:true  },
+    ],
+    scores:[
+      { label:'Price Score',    v:[88,100], c:['#6f42c1','#20c997'] },
+      { label:'Delivery Speed', v:[80,90],  c:['#6f42c1','#20c997'] },
+      { label:'Vendor Rating',  v:[85,92],  c:['#6f42c1','#20c997'] },
+      { label:'Payment Terms',  v:[50,75],  c:['#6f42c1','#20c997'] },
+    ],
+    insights:[
+      { icon:'fas fa-indian-rupee-sign', ib:'rgba(34,197,94,.1)', ic:'#22c55e', label:'Cheapest Quote',   value:'₹9,40,000', sub:'Alpha Interiors — saves ₹12K' },
+      { icon:'fas fa-truck-fast',        ib:'rgba(13,110,253,.1)', ic:'#0d6efd',label:'Faster Delivery',  value:'8 days',    sub:'Alpha Interiors — 2 days faster' },
+      { icon:'fas fa-star',              ib:'rgba(253,126,20,.1)', ic:'#fd7e14', label:'Best Rated',       value:'4.8 / 5',   sub:'Alpha Interiors' },
+    ],
+    rows:[
+      { sec:'Pricing' },
+      { crit:'Unit Price', icon:'fa-tag',           vals:['₹23,800','₹23,500'], win:1, worst:0 },
+      { crit:'Grand Total',icon:'fa-receipt',        vals:['₹9,52,000','₹9,40,000'], win:1, worst:0 },
+      { sec:'Logistics' },
+      { crit:'Delivery (days)', icon:'fa-truck',     vals:['10','8'], win:1, worst:0 },
+      { crit:'Payment Terms',   icon:'fa-calendar-check', vals:['Advance 50%','Net 30'], win:1 },
+      { sec:'Vendor Info' },
+      { crit:'Rating', icon:'fa-star',               vals:['4.5','4.8'], win:1, type:'rating' },
+      { crit:'Warranty',icon:'fa-shield-check',      vals:['1 Yr Onsite','1 Yr Onsite'], win:-1 },
+    ]
+  },
+  'RFQ-022':{
+    title:'RFQ-022 · Stationery & Office Supplies',
+    sub:'3 quotations received · Deadline: 20 Jun 2026 · Category: Stationery',
+    deadline:'20 Jun', savings:'₹12.5K', winner:'Infra Sup.',
+    dp:{ title:'Recommended: Infra Supplies Pvt Ltd', price:'₹78,500', sub:'Lowest price · Free delivery · On-delivery payment' },
+    modal:{ vendor:'Infra Supplies Pvt Ltd', init:'IS', bg:'linear-gradient(135deg,#6f42c1,#0d6efd)', amount:'₹78,500', rfq:'RFQ-022', quotId:'QUOT-001', delivery:'4 days', payment:'On Delivery', gst:'12%', grand:'₹87,920' },
+    vendors:[
+      { name:'Infra Supplies Pvt Ltd', init:'IS', bg:'linear-gradient(135deg,#6f42c1,#0d6efd)', quotId:'QUOT-001', winner:true  },
+      { name:'Global Print Works',     init:'GP', bg:'linear-gradient(135deg,#fd7e14,#d63384)', quotId:'QUOT-010', winner:false },
+      { name:'Delta Logistics',        init:'DL', bg:'linear-gradient(135deg,#20c997,#6610f2)', quotId:'QUOT-006', winner:false },
+    ],
+    scores:[
+      { label:'Price Score',    v:[100,92,86],  c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Delivery Speed', v:[100,80,60],  c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Vendor Rating',  v:[85,90,75],   c:['#6f42c1','#fd7e14','#20c997'] },
+      { label:'Payment Terms',  v:[100,80,100], c:['#6f42c1','#fd7e14','#20c997'] },
+    ],
+    insights:[
+      { icon:'fas fa-indian-rupee-sign', ib:'rgba(34,197,94,.1)', ic:'#22c55e', label:'Cheapest Quote',   value:'₹78,500',  sub:'Infra Supplies — saves ₹12.5K vs highest' },
+      { icon:'fas fa-truck-fast',        ib:'rgba(13,110,253,.1)', ic:'#0d6efd',label:'Fastest Delivery', value:'4 days',   sub:'Infra Supplies — with free delivery' },
+      { icon:'fas fa-star',              ib:'rgba(253,126,20,.1)', ic:'#fd7e14', label:'Best Rated',       value:'4.8 / 5',  sub:'Global Print Works' },
+    ],
+    rows:[
+      { sec:'Pricing' },
+      { crit:'A4 Paper (unit)',    icon:'fa-tag',     vals:['₹260','₹280','₹310'], win:0, worst:2 },
+      { crit:'Grand Total',        icon:'fa-receipt', vals:['₹78,500','₹85,000','₹91,000'], win:0, worst:2 },
+      { sec:'Logistics' },
+      { crit:'Delivery (days)',    icon:'fa-truck',   vals:['4','3','5'], win:1, worst:2 },
+      { crit:'Free Delivery',      icon:'fa-gift',    vals:['Yes','No','No'], win:0 },
+      { crit:'Payment Terms',      icon:'fa-calendar-check', vals:['On Delivery','On Delivery','On Delivery'], win:-1 },
+      { sec:'Vendor Info' },
+      { crit:'Rating',             icon:'fa-star',    vals:['4.5','4.8','3.9'], win:1, worst:2, type:'rating' },
+    ]
+  },
+  'RFQ-017':{
+    title:'RFQ-017 · Raw Material – Steel Rods FE550',
+    sub:'2 quotations received · Deadline: 28 Jun 2026 · Category: Raw Materials',
+    deadline:'28 Jun', savings:'₹2.5L', winner:'Delta Log.',
+    dp:{ title:'Recommended: Delta Logistics', price:'₹5,25,00,000', sub:'Lower unit price · SAIL certified · Competitive Net 60 terms' },
+    modal:{ vendor:'Delta Logistics', init:'DL', bg:'linear-gradient(135deg,#20c997,#6610f2)', amount:'₹5,25,00,000', rfq:'RFQ-017', quotId:'QUOT-002', delivery:'10 days', payment:'Net 60 days', gst:'18%', grand:'₹6,19,50,000' },
+    vendors:[
+      { name:'CraftingTransport', init:'CT', bg:'linear-gradient(135deg,#6f42c1,#fd7e14)', quotId:'QUOT-007', winner:false },
+      { name:'Delta Logistics',   init:'DL', bg:'linear-gradient(135deg,#20c997,#6610f2)', quotId:'QUOT-002', winner:true  },
+    ],
+    scores:[
+      { label:'Price Score',    v:[95,100], c:['#6f42c1','#20c997'] },
+      { label:'Delivery Speed', v:[100,80], c:['#6f42c1','#20c997'] },
+      { label:'Vendor Rating',  v:[80,85],  c:['#6f42c1','#20c997'] },
+      { label:'Payment Terms',  v:[80,80],  c:['#6f42c1','#20c997'] },
+    ],
+    insights:[
+      { icon:'fas fa-indian-rupee-sign', ib:'rgba(34,197,94,.1)', ic:'#22c55e', label:'Cheapest Quote',   value:'₹5.25Cr',  sub:'Delta Logistics — saves ₹2.5L' },
+      { icon:'fas fa-truck-fast',        ib:'rgba(13,110,253,.1)', ic:'#0d6efd',label:'Faster Delivery',  value:'7 days',   sub:'CraftingTransport — 3 days faster' },
+      { icon:'fas fa-star',              ib:'rgba(253,126,20,.1)', ic:'#fd7e14', label:'Best Rated',       value:'4.2 / 5',  sub:'Delta Logistics' },
+    ],
+    rows:[
+      { sec:'Pricing' },
+      { crit:'Unit Price (per KG)', icon:'fa-tag',     vals:['₹110','₹105'], win:1, worst:0 },
+      { crit:'Grand Total',         icon:'fa-receipt', vals:['₹5,50,00,000','₹5,25,00,000'], win:1, worst:0 },
+      { sec:'Logistics' },
+      { crit:'Delivery (days)',     icon:'fa-truck',   vals:['7','10'], win:0, worst:1 },
+      { crit:'Payment Terms',       icon:'fa-calendar-check', vals:['Net 60','Net 60'], win:-1 },
+      { sec:'Vendor Info' },
+      { crit:'Rating',              icon:'fa-star',    vals:['4.0','4.2'], win:1, type:'rating' },
+      { crit:'BIS Certified',       icon:'fa-certificate', vals:['Yes','Yes'], win:-1 },
+    ]
+  }
+};
+
+let activeRFQ = 'RFQ-024';
+
+/* ══════════════════ LOAD ══════════════════ */
+function loadComparison(rfqId) {
+  const d = DATA[rfqId]; if(!d) return;
+  activeRFQ = rfqId;
+
+  document.getElementById('st-quotes').textContent   = d.vendors.length;
+  document.getElementById('st-savings').textContent  = d.savings;
+  document.getElementById('st-winner').textContent   = d.winner;
+  document.getElementById('st-deadline').textContent = d.deadline;
+
+  document.getElementById('dp-title').textContent = d.dp.title;
+  document.getElementById('dp-price').textContent = d.dp.price;
+  document.getElementById('dp-sub').innerHTML = d.dp.sub.replace(d.dp.price, '<strong>' + d.dp.price + '</strong>');
+
+  document.getElementById('cmp-title').textContent = d.title;
+  document.getElementById('cmp-sub').textContent   = d.sub;
+
+  renderScores(d);
+  renderInsights(d);
+  renderTable(d);
+}
+
+/* ══════════════════ SCORES ══════════════════ */
+function renderScores(d) {
+  const c = document.getElementById('score-rows');
+  c.innerHTML = '';
+  d.scores.forEach(s => {
+    const grp = document.createElement('div');
+    grp.className = 'score-group';
+    grp.innerHTML = `<div class="score-group-label">${s.label}</div>`;
+    s.v.forEach((val, i) => {
+      const r = document.createElement('div');
+      r.className = 'score-row';
+      r.innerHTML = `
+        <div class="score-label">${d.vendors[i].name}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:0%;background:${s.c[i]};" data-w="${val}"></div></div>
+        <div class="score-val" style="color:${s.c[i]};">${val}</div>`;
+      grp.appendChild(r);
+    });
+    c.appendChild(grp);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar[data-w]').forEach(b => { b.style.width = b.getAttribute('data-w') + '%'; });
+  }, 80);
+}
+
+/* ══════════════════ INSIGHTS ══════════════════ */
+function renderInsights(d) {
+  document.getElementById('insights-grid').innerHTML = d.insights.map(ins => `
+    <div class="insight-card">
+      <div class="ic-icon" style="background:${ins.ib};color:${ins.ic};"><i class="${ins.icon}"></i></div>
+      <div class="ic-label">${ins.label}</div>
+      <div class="ic-value" style="color:${ins.ic};">${ins.value}</div>
+      <div class="ic-sub">${ins.sub}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════ TABLE ══════════════════ */
+function renderTable(d) {
+  const n = d.vendors.length;
+  let thead = `<thead><tr><th class="crit-col">Criteria</th>`;
+  d.vendors.forEach((v,i) => {
+    const wc = v.winner ? 'winner-col' : '';
+    thead += `<th class="vendor-th ${wc}">
+      <div class="vendor-th-inner">
+        ${v.winner ? '<span class="winner-crown">👑</span>' : ''}
+        <div class="vendor-avatar" style="background:${v.bg};">${v.init}</div>
+        <div class="vendor-name">${v.name}</div>
+        <div class="vendor-quot-id">${v.quotId}</div>
+        ${v.winner ? '<span class="winner-badge">Best Value</span>' : ''}
+      </div></th>`;
+  });
+  thead += '</tr></thead>';
+
+  let tbody = '<tbody>';
+  d.rows.forEach(row => {
+    if (row.sec) {
+      tbody += `<tr class="section-row"><td class="crit-col" colspan="${n+1}">${row.sec}</td></tr>`;
+      return;
+    }
+    tbody += `<tr><td class="crit-col"><i class="fas ${row.icon} crit-icon"></i>${row.crit}</td>`;
+    row.vals.forEach((val, i) => {
+      const wc = d.vendors[i].winner ? 'winner-col' : '';
+      let cc = '';
+      let content = val;
+      if (row.win !== -1 && row.win === i) cc = 'cell-best';
+      else if (row.worst !== undefined && row.worst === i) cc = 'cell-worst';
+      if (row.type === 'rating') {
+        const r = parseFloat(val);
+        const stars = '<span class="rating-stars">'
+          + '<i class="fas fa-star star-f"></i>'.repeat(Math.floor(r))
+          + (r % 1 >= 0.5 ? '<i class="fas fa-star-half-stroke star-f"></i>' : '')
+          + '<i class="far fa-star star-e"></i>'.repeat(5 - Math.ceil(r))
+          + '</span>';
+        content = val + ' ' + stars;
+      }
+      tbody += `<td class="${wc} ${cc}">${content}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+
+  let tfoot = `<tfoot><tr><td class="crit-col" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9097a5;">Select Vendor</td>`;
+  d.vendors.forEach((v, i) => {
+    const wc = v.winner ? 'winner-col' : '';
+    tfoot += `<td class="${wc}">
+      ${v.winner
+        ? `<button class="btn-success btn-sm" onclick="selectAndApprove(${i})"><i class="fas fa-circle-check"></i> Select &amp; Approve</button>`
+        : `<button class="btn-outline btn-sm" onclick="selectAndApprove(${i})"><i class="fas fa-check"></i> Select</button>`
+      }
+    </td>`;
+  });
+  tfoot += '</tr></tfoot>';
+
+  document.getElementById('cmp-table').innerHTML = thead + tbody + tfoot;
+}
+
+/* ══════════════════ MODAL ══════════════════ */
+function selectAndApprove(idx) {
+  const d = DATA[activeRFQ];
+  const v = d.vendors[idx];
+  const m = (idx === d.vendors.findIndex(vv => vv.winner)) ? d.modal : {
+    vendor: v.name, init: v.init, bg: v.bg, amount:'–', rfq: activeRFQ,
+    quotId: v.quotId, delivery:'–', payment:'–', gst:'18%', grand:'–'
+  };
+  populateModal(m);
+  openApprovalModal();
+}
+
+function openApprovalModal() { populateModal(DATA[activeRFQ].modal); document.getElementById('approval-modal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal() { document.getElementById('approval-modal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('approval-modal').addEventListener('click', e => { if(e.target===document.getElementById('approval-modal')) closeModal(); });
+
+function populateModal(m) {
+  document.getElementById('m-avatar').textContent  = m.init;
+  document.getElementById('m-avatar').style.background = m.bg;
+  document.getElementById('m-vendor').textContent  = m.vendor;
+  document.getElementById('m-amount').textContent  = 'Grand Total: ' + m.grand;
+  document.getElementById('m-rfq').textContent     = m.rfq;
+  document.getElementById('m-quotid').textContent  = m.quotId;
+  document.getElementById('m-delivery').textContent= m.delivery;
+  document.getElementById('m-payment').textContent = m.payment;
+  document.getElementById('m-gst').textContent     = m.gst;
+  document.getElementById('m-grand').textContent   = m.grand;
+}
+
+function confirmApproval() {
+  const d = DATA[activeRFQ];
+  closeModal();
+  showToast('🎉 PO created for ' + d.modal.vendor + '! Vendor notified.', 'success');
+  setTimeout(() => showToast('Redirecting to Purchase Orders…', 'info'), 1800);
+  setTimeout(() => { window.location.href = 'vendorbridge-purchase-orders-invoices.html'; }, 3200);
+}
+
+/* ══════════════════ UTILITIES ══════════════════ */
+function exportReport() { showToast('Report exported as PDF.', 'info'); }
+
+function showToast(msg, type='success') {
+  const icons={success:'fa-circle-check',error:'fa-circle-exclamation',info:'fa-circle-info'};
+  const colors={success:'#22c55e',error:'#ef4444',info:'#0d6efd'};
+  const t = document.createElement('div');
+  t.style.cssText = `background:#fff;border:1px solid #eaecf4;border-radius:12px;padding:12px 16px;
+    display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);
+    font-size:.84rem;color:#1a1d2e;min-width:260px;max-width:360px;
+    animation:fadeInUp .3s ease;font-family:'DM Sans',sans-serif;`;
+  t.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
+    <span style="flex:1;">${msg}</span>
+    <span style="cursor:pointer;color:#b0b7c8;font-size:.8rem;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(() => t.remove(), 400); }, 4200);
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
+function handleResize() {
+  const hb = document.getElementById('hamburger-btn');
+  hb.style.display = window.innerWidth <= 900 ? 'block' : 'none';
+  if (window.innerWidth > 900) document.getElementById('sidebar').classList.remove('mobile-open');
+}
+window.addEventListener('resize', handleResize); handleResize();
+
+/* ══════════════════ INIT ══════════════════ */
+loadComparison('RFQ-024');
+</script>
+</body>
+</html>

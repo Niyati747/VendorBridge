@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendorBridge – Approval Workflow</title>
+  <meta name="description" content="VendorBridge Approval Workflow – review vendor quotations, add comments, and approve to generate purchase orders."/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ══════════════════════════════════════════════════
+       DESIGN TOKENS — identical to all VendorBridge screens
+    ══════════════════════════════════════════════════ */
+    :root {
+      --vb-purple:    #6f42c1;
+      --vb-blue:      #0d6efd;
+      --vb-teal:      #20c997;
+      --vb-orange:    #fd7e14;
+      --vb-indigo:    #6610f2;
+      --vb-pink:      #d63384;
+      --vb-green:     #22c55e;
+      --vb-red:       #ef4444;
+      --vb-grad-main: linear-gradient(135deg,var(--vb-purple) 0%,var(--vb-blue) 60%,var(--vb-teal) 100%);
+      --vb-grad-btn:  linear-gradient(45deg,var(--vb-purple),var(--vb-blue));
+      --vb-grad-btn-h:linear-gradient(45deg,var(--vb-indigo),var(--vb-purple));
+      --vb-shadow:    0 8px 32px rgba(111,66,193,.18);
+      --vb-shadow-lg: 0 20px 60px rgba(111,66,193,.22);
+      --sidebar-w:    240px;
+      --topbar-h:     64px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f4f5fb;min-height:100vh;display:flex;overflow-x:hidden;color:#1a1d2e}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(111,66,193,.25);border-radius:4px}
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid #eaecf4;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s ease}
+    .sidebar-brand{display:flex;align-items:center;gap:12px;padding:20px 20px 18px;border-bottom:1px solid #eaecf4}
+    .sidebar-brand .logo-icon{width:38px;height:38px;background:var(--vb-grad-btn);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(111,66,193,.35)}
+    .sidebar-brand .logo-icon i{color:#fff;font-size:1rem}
+    .sidebar-brand .logo-text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.15rem;color:#1a1d2e;letter-spacing:-.3px}
+    .sidebar-brand .logo-text span{font-weight:400;color:#6f42c1}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+    .nav-label{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b0b7c8;padding:8px 10px 4px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;cursor:pointer;text-decoration:none;color:#6b7490;font-size:.875rem;font-weight:500;transition:all .22s;margin-bottom:2px;position:relative}
+    .nav-item i{width:18px;text-align:center;font-size:.9rem}
+    .nav-item:hover{background:rgba(111,66,193,.06);color:var(--vb-purple)}
+    .nav-item.active{background:rgba(111,66,193,.1);color:var(--vb-purple);font-weight:600}
+    .nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--vb-grad-btn);border-radius:0 3px 3px 0}
+    .nav-badge{margin-left:auto;background:var(--vb-grad-btn);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif}
+    .nav-badge.red{background:#ef4444}
+    .sidebar-user{padding:14px 16px;border-top:1px solid #eaecf4;display:flex;align-items:center;gap:10px}
+    .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--vb-grad-main);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
+    .user-info{flex:1;min-width:0}
+    .user-info .uname{font-size:.82rem;font-weight:600;color:#1a1d2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-info .urole{font-size:.7rem;color:#9097a5}
+    .user-cog{color:#b0b7c8;cursor:pointer;font-size:.85rem;transition:color .2s}
+    .user-cog:hover{color:var(--vb-purple)}
+
+    /* ── TOP BAR ─────────────────────────────────────── */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:#fff;border-bottom:1px solid #eaecf4;display:flex;align-items:center;padding:0 28px;gap:16px;z-index:100}
+    .topbar-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:1.05rem;color:#1a1d2e;flex:1}
+    .topbar-title span{color:#b0b7c8;font-weight:400}
+    .topbar-search{position:relative}
+    .topbar-search input{background:#f4f5fb;border:1.5px solid #e8eaf0;border-radius:10px;padding:8px 14px 8px 36px;font-size:.83rem;color:#1a1d2e;width:220px;outline:none;font-family:'DM Sans',sans-serif;transition:all .25s}
+    .topbar-search input:focus{border-color:var(--vb-purple);background:#fff;box-shadow:0 0 0 3px rgba(111,66,193,.1);width:260px}
+    .topbar-search i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#b0b7c8;font-size:.82rem}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .topbar-icon-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid #e8eaf0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7490;font-size:.9rem;transition:all .22s;position:relative;text-decoration:none}
+    .topbar-icon-btn:hover{border-color:var(--vb-purple);color:var(--vb-purple);background:rgba(111,66,193,.04)}
+    .notif-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;position:absolute;top:5px;right:5px;border:2px solid #fff}
+
+    /* ── MAIN CONTENT ────────────────────────────────── */
+    .main-content{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);min-height:100vh;flex:1;display:flex;flex-direction:column}
+    .page-body{padding:28px 32px;flex:1}
+
+    /* ── PAGE HEADER ─────────────────────────────────── */
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .page-header h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;color:#1a1d2e;margin:0}
+    .page-header p{font-size:.88rem;color:#8a909e;margin:2px 0 0}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* ── BUTTONS ─────────────────────────────────────── */
+    .btn-vb-primary{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:var(--vb-grad-btn);color:#fff;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .3s;box-shadow:0 4px 18px rgba(111,66,193,.3);letter-spacing:.2px;text-decoration:none}
+    .btn-vb-primary:hover{background:var(--vb-grad-btn-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(111,66,193,.4);color:#fff}
+    .btn-vb-primary:active{transform:translateY(0)}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:transparent;color:var(--vb-purple);border:1.5px solid rgba(111,66,193,.35);border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .25s;text-decoration:none}
+    .btn-outline:hover{background:rgba(111,66,193,.06);border-color:var(--vb-purple);color:var(--vb-purple)}
+    .btn-sm{padding:7px 14px;font-size:.8rem;border-radius:8px}
+
+    /* ── STEPPER WORKFLOW ────────────────────────────── */
+    .stepper-container {
+      background: #fff;
+      border: 1px solid #eaecf4;
+      border-radius: 16px;
+      padding: 24px 32px;
+      box-shadow: 0 2px 12px rgba(111,66,193,0.06);
+    }
+    .stepper-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      margin: 10px 0;
+    }
+    .stepper-line {
+      position: absolute;
+      top: 22px;
+      left: 12.5%;
+      right: 12.5%;
+      height: 3px;
+      background: #e8eaf0;
+      z-index: 1;
+      transform: translateY(-50%);
+    }
+    .stepper-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 66.6%;
+      background: linear-gradient(90deg, var(--vb-teal) 0%, var(--vb-blue) 100%);
+      transition: width 0.5s ease;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+    .step-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #f4f5fb;
+      border: 2px solid #e8eaf0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #9097a5;
+      transition: all 0.3s ease;
+    }
+    .step-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #9097a5;
+      margin-top: 8px;
+      text-align: center;
+    }
+    /* Stepper States */
+    .step.done .step-icon {
+      background: rgba(32, 201, 151, 0.1);
+      border-color: var(--vb-teal);
+      color: var(--vb-teal);
+    }
+    .step.done .step-label {
+      color: var(--vb-teal);
+    }
+    .step.active .step-icon {
+      background: var(--vb-grad-btn);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(111,66,193,0.3);
+    }
+    .step.active .step-label {
+      color: var(--vb-blue);
+      font-weight: 700;
+    }
+    .step.rejected .step-icon {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--vb-red);
+      color: var(--vb-red);
+    }
+    .step.rejected .step-label {
+      color: var(--vb-red);
+      font-weight: 700;
+    }
+
+    /* ── RFQ SELECTOR ────────────────────────────────── */
+    .rfq-selector-card {
+      background: #fff;
+      border: 1px solid #eaecf4;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 12px rgba(111,66,193,0.06);
+    }
+    .rfq-selector-card h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      color: #1a1d2e;
+      margin-bottom: 14px;
+    }
+    .rfq-select-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .rfq-select-row .fg {
+      flex: 1;
+      min-width: 180px;
+    }
+    .fg label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: #4a5068;
+      margin-bottom: 6px;
+      display: block;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .iw {
+      position: relative;
+    }
+    .iw .fi {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b0b7c8;
+      font-size: .85rem;
+      pointer-events: none;
+    }
+    .iw select, .iw input, .iw textarea {
+      width: 100%;
+      padding: 10px 13px 10px 38px;
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      font-size: .88rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d2e;
+      background: #fafbfe;
+      transition: all 0.25s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .iw select:focus, .iw input:focus, .iw textarea:focus {
+      border-color: var(--vb-purple);
+      background: #fff;
+      box-shadow: 0 0 0 3.5px rgba(111,66,193,0.1);
+    }
+
+    /* ── DETAIL PANELS & TIMELINE ─────────────────────── */
+    .detail-card {
+      background: #fff;
+      border: 1px solid #eaecf4;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(111,66,193,0.06);
+    }
+    .detail-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail-card h3 i {
+      color: var(--vb-purple);
+    }
+    
+    .timeline {
+      position: relative;
+      padding-left: 36px;
+      margin-top: 15px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 17px;
+      width: 2px;
+      background: #eaecf4;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+    .timeline-badge {
+      position: absolute;
+      left: -36px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #e8eaf0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+    .timeline-item.approved .timeline-badge {
+      background: rgba(32, 201, 151, 0.1);
+      border-color: var(--vb-teal);
+      color: var(--vb-teal);
+    }
+    .timeline-item.pending .timeline-badge {
+      background: rgba(253, 126, 20, 0.1);
+      border-color: var(--vb-orange);
+      color: var(--vb-orange);
+      animation: pulse 2s infinite;
+    }
+    .timeline-item.rejected .timeline-badge {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--vb-red);
+      color: var(--vb-red);
+    }
+    .timeline-panel {
+      padding-left: 12px;
+    }
+    .timeline-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1a1d2e;
+      margin-bottom: 4px;
+    }
+    .timeline-status {
+      font-size: 0.82rem;
+      margin-bottom: 2px;
+      font-weight: 500;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(253,126,20,0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(253,126,20,0); }
+      100% { box-shadow: 0 0 0 0 rgba(253,126,20,0); }
+    }
+
+    /* ── REMARKS ─────────────────────────────────────── */
+    .field-group {
+      margin-top: 20px;
+    }
+    .field-group label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: #4a5068;
+      margin-bottom: 8px;
+      display: block;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .input-wrap textarea {
+      width: 100%;
+      min-height: 95px;
+      padding: 12px 13px 12px 38px;
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      font-size: .88rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d2e;
+      background: #fafbfe;
+      transition: all 0.25s;
+      outline: none;
+      resize: vertical;
+    }
+    .input-wrap textarea:focus {
+      border-color: var(--vb-purple);
+      background: #fff;
+      box-shadow: 0 0 0 3.5px rgba(111,66,193,0.1);
+    }
+    .input-wrap .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 14px;
+      color: #b0b7c8;
+      font-size: .85rem;
+      pointer-events: none;
+    }
+
+    /* ── QUOTATION SUMMARY CARD ──────────────────────── */
+    .summary-card {
+      background: #fff;
+      border: 1px solid #eaecf4;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(111,66,193,0.06);
+    }
+    .summary-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eaecf4;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .summary-header .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(111, 66, 193, 0.08);
+      color: var(--vb-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 10px rgba(111, 66, 193, 0.1);
+    }
+    .summary-header h4 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      margin: 0;
+    }
+    .summary-header p {
+      font-size: 0.76rem;
+      margin: 2px 0 0;
+      color: #9097a5;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f2f7;
+      font-size: 0.88rem;
+    }
+    .summary-row.border-none {
+      border-bottom: none;
+    }
+    .summary-row .lbl {
+      color: #9097a5;
+      font-weight: 500;
+    }
+    .summary-row .val {
+      color: #1a1d2e;
+      font-weight: 600;
+      text-align: right;
+    }
+    .summary-row .val.text-purple {
+      color: var(--vb-purple);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .rating-stars {
+      display: inline-flex;
+      gap: 2px;
+      font-size: .72rem;
+      margin-left: 6px;
+    }
+    .star-f { color: #f59e0b; }
+    .star-e { color: #e2e8f0; }
+
+    /* Reject Button Style */
+    .btn-reject-style {
+      color: var(--vb-red) !important;
+      border-color: rgba(239, 68, 68, 0.35) !important;
+    }
+    .btn-reject-style:hover {
+      background: rgba(239, 68, 68, 0.06) !important;
+      border-color: var(--vb-red) !important;
+      color: var(--vb-red) !important;
+    }
+    .btn-success-style {
+      background: linear-gradient(45deg, var(--vb-green), #4ade80);
+      border: none;
+      color: white;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+    }
+    .btn-success-style:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34,197,94,0.4);
+      color: white;
+    }
+
+    /* ── TOAST ───────────────────────────────────────── */
+    #toast-container{position:fixed;bottom:26px;right:26px;z-index:99999;display:flex;flex-direction:column;gap:10px}
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.mobile-open{transform:translateX(0)}
+      .main-content{margin-left:0}
+      .topbar{left:0}
+      #hamburger-btn{display:block!important}
+    }
+    @media(max-width:640px){
+      .page-body{padding:18px 16px}
+      .stepper-line{left:18%;right:18%;}
+      .stepper-progress{width:50%;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon"><i class="fas fa-link"></i></div>
+    <div class="logo-text">Vendor<span>Bridge</span></div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+
+    <a href="vendorbridge-dashboard.html"          class="nav-item" id="nav-dashboard">
+      <i class="fas fa-gauge-high"></i> Dashboard
+    </a>
+    <a href="vendorbridge-vendors.html"            class="nav-item" id="nav-vendors">
+      <i class="fas fa-store"></i> Vendors
+    </a>
+    <a href="vendorbridge-rfq.html"                class="nav-item" id="nav-rfq">
+      <i class="fas fa-file-invoice"></i> RFQ's
+      <span class="nav-badge">8</span>
+    </a>
+    <a href="vendorbridge-quotations.html"         class="nav-item" id="nav-quotations">
+      <i class="fas fa-file-circle-check"></i> Quotations
+      <span class="nav-badge">12</span>
+    </a>
+    <a href="vendorbridge-quotation-compare.html"  class="nav-item" id="nav-compare">
+      <i class="fas fa-scale-balanced"></i> Compare Quotes
+    </a>
+    <a href="vendorbridge-approvals.html"          class="nav-item active" id="nav-approvals">
+      <i class="fas fa-check-double"></i> Approvals
+      <span class="nav-badge red" id="sidebar-approval-badge">4</span>
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">Procurement</div>
+    <a href="vendorbridge-purchase-orders-invoices.html" class="nav-item" id="nav-po">
+      <i class="fas fa-cart-flatbed"></i> Purchase Orders &amp; Invoices
+    </a>
+    <a href="vendorbridge-reports.html"            class="nav-item" id="nav-rep">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">System</div>
+    <a href="vendorbridge-activity.html"           class="nav-item" id="nav-act">
+      <i class="fas fa-bolt"></i> Activity
+    </a>
+    <a href="#"                                    class="nav-item" id="nav-settings">
+      <i class="fas fa-gear"></i> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">PS</div>
+    <div class="user-info">
+      <div class="uname">Procurement User</div>
+      <div class="urole">Procurement Officer</div>
+    </div>
+    <i class="fas fa-right-from-bracket user-cog" title="Logout"
+       onclick="window.location.href='vendorbridge-auth.html'"></i>
+  </div>
+</aside>
+
+<!-- ════════════════ TOP BAR ════════════════ -->
+<header class="topbar">
+  <button id="hamburger-btn"
+    style="display:none;background:none;border:none;font-size:1.2rem;color:#6b7490;cursor:pointer;margin-right:8px;"
+    onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+  <div class="topbar-title">
+    Approvals &nbsp;<span>/ Workflow Status</span>
+  </div>
+
+  <div class="topbar-actions">
+    <div class="topbar-icon-btn" title="Notifications"
+         onclick="showToast('4 pending approvals require attention.','info')">
+      <i class="fas fa-bell"></i>
+      <span class="notif-dot"></span>
+    </div>
+    <div class="topbar-icon-btn" title="Help"><i class="fas fa-circle-question"></i></div>
+    <a href="vendorbridge-auth.html" class="topbar-icon-btn" title="Sign Out">
+      <i class="fas fa-right-from-bracket"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<main class="main-content">
+  <div class="page-body">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 id="page-workflow-title">Approval Workflow</h1>
+        <p id="page-workflow-subtitle">RFQ: office furniture Q2 - Vendor: Infra Supplies - 185400</p>
+      </div>
+      <div class="header-actions">
+        <a href="vendorbridge-quotation-compare.html" class="btn-outline">
+          <i class="fas fa-scale-balanced"></i> Compare Quotes
+        </a>
+      </div>
+    </div>
+
+    <!-- RFQ SELECTOR (Dropdown Interactivity) -->
+    <div class="rfq-selector-card mb-4">
+      <h2><i class="fas fa-filter" style="color:var(--vb-purple);margin-right:8px;"></i>Select RFQ Awaiting L2 Approval</h2>
+      <div class="rfq-select-row">
+        <div class="fg">
+          <label>RFQ Reference</label>
+          <div class="iw">
+            <select id="rfq-select" onchange="loadRFQ(this.value)">
+              <option value="RFQ-024">RFQ-024 · Office Furniture Q2 (Awaiting L2)</option>
+              <option value="RFQ-023">RFQ-023 · Laptop Refresh Q3 (Awaiting L2)</option>
+              <option value="RFQ-022">RFQ-022 · Stationery &amp; Supplies (Awaiting L2)</option>
+              <option value="RFQ-017">RFQ-017 · Steel Rods FE550 (Awaiting L2)</option>
+            </select>
+            <i class="fas fa-file-invoice fi"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEPPER PROGRESS TRACKER -->
+    <div class="stepper-container mb-4">
+      <div class="stepper-wrapper">
+        <div class="stepper-line">
+          <div class="stepper-progress" id="step-progress"></div>
+        </div>
+        
+        <!-- Step 1 -->
+        <div class="step done" id="step-1">
+          <div class="step-icon"><i class="fas fa-check"></i></div>
+          <div class="step-label">Submitted</div>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="step done" id="step-2">
+          <div class="step-icon"><i class="fas fa-check"></i></div>
+          <div class="step-label">L1 Review</div>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="step active" id="step-3">
+          <div class="step-icon" id="step-3-icon">3</div>
+          <div class="step-label" id="step-3-label">L2 approval</div>
+        </div>
+        
+        <!-- Step 4 -->
+        <div class="step" id="step-4">
+          <div class="step-icon" id="step-4-icon">4</div>
+          <div class="step-label" id="step-4-label">Generate PO</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN BODY GRID -->
+    <div class="row g-4">
+      <!-- Left Column: Timeline and Remarks -->
+      <div class="col-lg-7">
+        <div class="detail-card h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h3><i class="fas fa-sitemap"></i> Approval Chain</h3>
+            
+            <div class="timeline">
+              <!-- Rahul Mehta -->
+              <div class="timeline-item approved">
+                <div class="timeline-badge">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="timeline-panel">
+                  <h5 class="timeline-title" id="l1-name">Rahul Mehta <span class="text-muted">(Procurement head)</span></h5>
+                  <p class="timeline-status text-success" id="l1-status">Approved on May 20, 10:32 AM</p>
+                </div>
+              </div>
+              
+              <!-- Priya Shah -->
+              <div class="timeline-item pending" id="timeline-l2-item">
+                <div class="timeline-badge" id="timeline-l2-badge">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="timeline-panel">
+                  <h5 class="timeline-title" id="l2-name">Priya Shah <span class="text-muted">(Finance manager)</span></h5>
+                  <p class="timeline-status text-warning" id="l2-status">Awaiting approval (L2)</p>
+                  <small class="text-muted" id="l2-subtext">Assigned May 21</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Remarks Section -->
+          <div class="field-group">
+            <label for="approval-remarks">Approval Remarks</label>
+            <div class="input-wrap position-relative">
+              <textarea id="approval-remarks" placeholder="Add your comments or conditions...."></textarea>
+              <i class="fas fa-comment-dots field-icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Quotations Summary and Action Buttons -->
+      <div class="col-lg-5">
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div>
+              <h4>Quotations Summary</h4>
+              <p>Review supplier quotation details</p>
+            </div>
+          </div>
+          
+          <div class="summary-body mb-4">
+            <div class="summary-row">
+              <span class="lbl">Vendor</span>
+              <span class="val" id="sum-vendor">Infra Supplies PVT LTD</span>
+            </div>
+            <div class="summary-row">
+              <span class="lbl">Total</span>
+              <span class="val text-purple" id="sum-total">₹1,85,400</span>
+            </div>
+            <div class="summary-row">
+              <span class="lbl">Delivery</span>
+              <span class="val" id="sum-delivery">10 days</span>
+            </div>
+            <div class="summary-row border-none">
+              <span class="lbl">Rating</span>
+              <span class="val d-flex align-items-center justify-content-end" id="sum-rating">
+                <span>4.5/5</span>
+                <span class="rating-stars" id="sum-stars">
+                  <i class="fas fa-star star-f"></i>
+                  <i class="fas fa-star star-f"></i>
+                  <i class="fas fa-star star-f"></i>
+                  <i class="fas fa-star star-f"></i>
+                  <i class="fas fa-star-half-stroke star-f"></i>
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex flex-column gap-2" id="action-buttons-wrap">
+            <div class="d-flex gap-3">
+              <button class="btn-vb-primary flex-grow-1 py-3" id="btn-approve" onclick="handleApprove()">
+                <i class="fas fa-circle-check"></i> Approve
+              </button>
+              <button class="btn-outline btn-reject-style flex-grow-1 py-3" id="btn-reject" onclick="handleReject()">
+                <i class="fas fa-circle-xmark"></i> Reject
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ════════════════ TOAST CONTAINER ════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script>
+  /* ── INTERACTIVE DATABASE ─────────────────────────── */
+  const DATA = {
+    'RFQ-024': {
+      title: 'RFQ: office furniture Q2 - Vendor: Infra Supplies - 185400',
+      vendor: 'Infra Supplies PVT LTD',
+      total: '1,85,400',
+      delivery: '10 days',
+      rating: '4.5/5',
+      starsHtml: `<i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star-half-stroke star-f"></i>`,
+      l1Approver: 'Rahul Mehta (Procurement head)',
+      l1Status: 'Approved on May 20, 10:32 AM',
+      l2Approver: 'Priya Shah (Finance manager)',
+      l2Status: 'Awaiting approval (L2)',
+      l2Subtext: 'Assigned May 21',
+      status: 'awaiting', // awaiting, approved, rejected
+      remarks: ''
+    },
+    'RFQ-023': {
+      title: 'RFQ: Laptop Refresh Q3 - Vendor: Alpha Interiors - 1109200',
+      vendor: 'Alpha Interiors',
+      total: '11,09,200',
+      delivery: '8 days',
+      rating: '4.8/5',
+      starsHtml: `<i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i>`,
+      l1Approver: 'Rahul Mehta (Procurement head)',
+      l1Status: 'Approved on May 18, 02:15 PM',
+      l2Approver: 'Priya Shah (Finance manager)',
+      l2Status: 'Awaiting approval (L2)',
+      l2Subtext: 'Assigned May 19',
+      status: 'awaiting',
+      remarks: ''
+    },
+    'RFQ-022': {
+      title: 'RFQ: Stationery & Supplies - Vendor: Infra Supplies - 87920',
+      vendor: 'Infra Supplies PVT LTD',
+      total: '87,920',
+      delivery: '4 days',
+      rating: '4.5/5',
+      starsHtml: `<i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star-half-stroke star-f"></i>`,
+      l1Approver: 'Rahul Mehta (Procurement head)',
+      l1Status: 'Approved on May 15, 11:45 AM',
+      l2Approver: 'Priya Shah (Finance manager)',
+      l2Status: 'Awaiting approval (L2)',
+      l2Subtext: 'Assigned May 16',
+      status: 'awaiting',
+      remarks: ''
+    },
+    'RFQ-017': {
+      title: 'RFQ: Steel Rods FE550 - Vendor: Delta Logistics - 61950000',
+      vendor: 'Delta Logistics',
+      total: '6,19,50,000',
+      delivery: '10 days',
+      rating: '4.2/5',
+      starsHtml: `<i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="fas fa-star star-f"></i><i class="far fa-star star-e"></i>`,
+      l1Approver: 'Rahul Mehta (Procurement head)',
+      l1Status: 'Approved on May 10, 09:00 AM',
+      l2Approver: 'Priya Shah (Finance manager)',
+      l2Status: 'Awaiting approval (L2)',
+      l2Subtext: 'Assigned May 11',
+      status: 'awaiting',
+      remarks: ''
+    }
+  };
+
+  let activeRFQ = 'RFQ-024';
+
+  /* ── LOAD DATA ONTO PAGE ────────────────────────── */
+  function loadRFQ(rfqId) {
+    const r = DATA[rfqId];
+    if (!r) return;
+    activeRFQ = rfqId;
+
+    // Headings
+    document.getElementById('page-workflow-subtitle').textContent = r.title;
+    
+    // Timeline update
+    document.getElementById('l1-name').innerHTML = `${r.l1Approver}`;
+    document.getElementById('l1-status').textContent = r.l1Status;
+    document.getElementById('l2-name').innerHTML = `${r.l2Approver}`;
+    
+    // Remarks field
+    document.getElementById('approval-remarks').value = r.remarks;
+
+    // Summary Card
+    document.getElementById('sum-vendor').textContent = r.vendor;
+    document.getElementById('sum-total').textContent = '₹' + r.total;
+    document.getElementById('sum-delivery').textContent = r.delivery;
+    document.getElementById('sum-rating').innerHTML = `<span>${r.rating}</span><span class="rating-stars">${r.starsHtml}</span>`;
+
+    updateUIStates(r);
+  }
+
+  /* ── UPDATE WORKFLOW UI STATES ────────────────────── */
+  function updateUIStates(r) {
+    const stepProgress = document.getElementById('step-progress');
+    const step3 = document.getElementById('step-3');
+    const step3Icon = document.getElementById('step-3-icon');
+    const step3Label = document.getElementById('step-3-label');
+    const step4 = document.getElementById('step-4');
+    const step4Icon = document.getElementById('step-4-icon');
+    const step4Label = document.getElementById('step-4-label');
+    
+    const timelineL2Item = document.getElementById('timeline-l2-item');
+    const timelineL2Badge = document.getElementById('timeline-l2-badge');
+    const l2Status = document.getElementById('l2-status');
+    const l2Subtext = document.getElementById('l2-subtext');
+
+    const approveBtn = document.getElementById('btn-approve');
+    const rejectBtn = document.getElementById('btn-reject');
+    const remarksTextarea = document.getElementById('approval-remarks');
+
+    // Default CSS class resets
+    step3.className = 'step';
+    step4.className = 'step';
+    timelineL2Item.className = 'timeline-item';
+    remarksTextarea.disabled = false;
+
+    if (r.status === 'awaiting') {
+      // Stepper
+      stepProgress.style.width = '66.6%';
+      step3.classList.add('active');
+      step3Icon.innerHTML = '3';
+      step3Label.textContent = 'L2 approval';
+      step3Label.style.color = '';
+      step4Icon.innerHTML = '4';
+      step4Label.textContent = 'Generate PO';
+      step4Label.style.color = '';
+
+      // Timeline L2
+      timelineL2Item.classList.add('pending');
+      timelineL2Badge.innerHTML = '<i class="fas fa-clock"></i>';
+      l2Status.textContent = r.l2Status;
+      l2Status.className = 'timeline-status text-warning';
+      l2Subtext.textContent = r.l2Subtext;
+      l2Subtext.style.display = 'block';
+
+      // Buttons
+      approveBtn.innerHTML = '<i class="fas fa-circle-check"></i> Approve';
+      approveBtn.className = 'btn-vb-primary flex-grow-1 py-3';
+      approveBtn.style.display = 'block';
+      rejectBtn.style.display = 'block';
+    } 
+    else if (r.status === 'approved') {
+      // Stepper
+      stepProgress.style.width = '100%';
+      step3.classList.add('done');
+      step3Icon.innerHTML = '<i class="fas fa-check"></i>';
+      step3Label.textContent = 'L2 approved';
+      step4.classList.add('active');
+      step4Icon.innerHTML = '4';
+      step4Label.textContent = 'Generate PO';
+      
+      // Timeline L2
+      timelineL2Item.classList.add('approved');
+      timelineL2Badge.innerHTML = '<i class="fas fa-check"></i>';
+      l2Status.textContent = 'Approved';
+      l2Status.className = 'timeline-status text-success';
+      l2Subtext.style.display = 'none';
+
+      // Remarks & Buttons
+      remarksTextarea.disabled = true;
+      approveBtn.innerHTML = '<i class="fas fa-receipt"></i> Generate PO';
+      approveBtn.className = 'btn-success-style flex-grow-1 py-3';
+      approveBtn.style.display = 'block';
+      rejectBtn.style.display = 'none';
+    } 
+    else if (r.status === 'rejected') {
+      // Stepper
+      stepProgress.style.width = '66.6%';
+      step3.classList.add('rejected');
+      step3Icon.innerHTML = '<i class="fas fa-times"></i>';
+      step3Label.textContent = 'Rejected';
+      
+      // Timeline L2
+      timelineL2Item.classList.add('rejected');
+      timelineL2Badge.innerHTML = '<i class="fas fa-times"></i>';
+      l2Status.textContent = 'Rejected';
+      l2Status.className = 'timeline-status text-danger';
+      l2Subtext.style.display = 'none';
+
+      // Remarks & Buttons
+      remarksTextarea.disabled = true;
+      approveBtn.style.display = 'none';
+      rejectBtn.style.display = 'none';
+      
+      // Add a Re-evaluate option in place of buttons
+      const wrapper = document.getElementById('action-buttons-wrap');
+      // If reset button doesn't exist, create it
+      if (!document.getElementById('btn-reset')) {
+        const resetBtn = document.createElement('button');
+        resetBtn.id = 'btn-reset';
+        resetBtn.className = 'btn-outline w-100 py-3';
+        resetBtn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Reset for L2 Review';
+        resetBtn.onclick = () => {
+          r.status = 'awaiting';
+          resetBtn.remove();
+          loadRFQ(activeRFQ);
+          showToast('RFQ reset back to L2 Awaiting Review state.', 'info');
+        };
+        wrapper.appendChild(resetBtn);
+      }
+    }
+
+    // Clean up reset button if RFQ is not in rejected state
+    if (r.status !== 'rejected' && document.getElementById('btn-reset')) {
+      document.getElementById('btn-reset').remove();
+    }
+
+    // Update the pending approvals count badge in sidebar
+    updatePendingBadgeCount();
+  }
+
+  /* ── BUTTON CLICK HANDLERS ───────────────────────── */
+  function handleApprove() {
+    const r = DATA[activeRFQ];
+    r.remarks = document.getElementById('approval-remarks').value;
+
+    if (r.status === 'awaiting') {
+      r.status = 'approved';
+      showToast('🎉 L2 Approval successfully granted!', 'success');
+      loadRFQ(activeRFQ);
+    } 
+    else if (r.status === 'approved') {
+      // Step 4 Generate PO flow
+      showToast('🎉 Purchase Order created successfully! Vendor notified.', 'success');
+      setTimeout(() => {
+        showToast('Redirecting to Purchase Orders & Invoices…', 'info');
+      }, 1500);
+      setTimeout(() => {
+        window.location.href = 'vendorbridge-purchase-orders-invoices.html';
+      }, 3000);
+    }
+  }
+
+  function handleReject() {
+    const r = DATA[activeRFQ];
+    r.remarks = document.getElementById('approval-remarks').value;
+    
+    if (confirm('Are you sure you want to reject this RFQ?')) {
+      r.status = 'rejected';
+      showToast('❌ RFQ has been rejected by L2.', 'error');
+      loadRFQ(activeRFQ);
+    }
+  }
+
+  /* ── UTILITY FUNCTIONS ───────────────────────────── */
+  function updatePendingBadgeCount() {
+    let pendingCount = 0;
+    for (let key in DATA) {
+      if (DATA[key].status === 'awaiting') {
+        pendingCount++;
+      }
+    }
+    const badge = document.getElementById('sidebar-approval-badge');
+    badge.textContent = pendingCount;
+    if (pendingCount === 0) {
+      badge.style.display = 'none';
+    } else {
+      badge.style.display = 'inline-block';
+    }
+  }
+
+  function showToast(msg, type='success') {
+    const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', info: 'fa-circle-info' };
+    const colors = { success: '#22c55e', error: '#ef4444', info: '#0d6efd' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:#fff; border:1px solid #eaecf4; border-radius:12px; padding:12px 16px;
+      display:flex; align-items:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,.12);
+      font-size:.84rem; color:#1a1d2e; min-width:260px; max-width:360px;
+      animation:fadeInUp .3s ease; font-family:'DM Sans',sans-serif;`;
+    t.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]}; font-size:1rem; flex-shrink:0;"></i>
+      <span style="flex:1;">${msg}</span>
+      <span style="cursor:pointer; color:#b0b7c8; font-size:.8rem;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity .4s';
+      setTimeout(() => t.remove(), 400);
+    }, 4200);
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+  }
+
+  function handleResize() {
+    const hb = document.getElementById('hamburger-btn');
+    hb.style.display = window.innerWidth <= 900 ? 'block' : 'none';
+    if (window.innerWidth > 900) {
+      document.getElementById('sidebar').classList.remove('mobile-open');
+    }
+  }
+
+  // Keyframes for Toast Animation
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = `
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(styleSheet);
+
+  window.addEventListener('resize', handleResize);
+  handleResize();
+
+  /* ── INITIALIZATION ──────────────────────────────── */
+  loadRFQ('RFQ-024');
+</script>
+</body>
+</html>

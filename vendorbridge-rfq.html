@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendorBridge – RFQ's</title>
+  <meta name="description" content="VendorBridge RFQ's page – create and manage Requests for Quotation with vendors."/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ══════════════════════════════════════════════════
+       DESIGN TOKENS  (same as vendorbridge-auth.html)
+    ══════════════════════════════════════════════════ */
+    :root {
+      --vb-purple:      #6f42c1;
+      --vb-blue:        #0d6efd;
+      --vb-teal:        #20c997;
+      --vb-orange:      #fd7e14;
+      --vb-indigo:      #6610f2;
+      --vb-pink:        #d63384;
+      --vb-grad-main:   linear-gradient(135deg, var(--vb-purple) 0%, var(--vb-blue) 60%, var(--vb-teal) 100%);
+      --vb-grad-btn:    linear-gradient(45deg, var(--vb-purple), var(--vb-blue));
+      --vb-grad-btn-h:  linear-gradient(45deg, var(--vb-indigo), var(--vb-purple));
+      --vb-shadow:      0 8px 32px rgba(111,66,193,0.18);
+      --vb-shadow-lg:   0 20px 60px rgba(111,66,193,0.22);
+      --sidebar-w:      240px;
+      --topbar-h:       64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f4f5fb;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      color: #1a1d2e;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(111,66,193,0.25); border-radius: 4px; }
+
+    /* ══════════════════════════════════════════════════
+       SIDEBAR
+    ══════════════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: #fff;
+      border-right: 1px solid #eaecf4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 200;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 20px 18px;
+      border-bottom: 1px solid #eaecf4;
+    }
+    .sidebar-brand .logo-icon {
+      width: 38px; height: 38px;
+      background: var(--vb-grad-btn);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(111,66,193,0.35);
+    }
+    .sidebar-brand .logo-icon i { color: #fff; font-size: 1rem; }
+    .sidebar-brand .logo-text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #1a1d2e;
+      letter-spacing: -0.3px;
+    }
+    .sidebar-brand .logo-text span { font-weight: 400; color: #6f42c1; }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+    .nav-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #b0b7c8;
+      padding: 8px 10px 4px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #6b7490;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.22s;
+      margin-bottom: 2px;
+      position: relative;
+    }
+    .nav-item i { width: 18px; text-align: center; font-size: 0.9rem; }
+    .nav-item:hover {
+      background: rgba(111,66,193,0.06);
+      color: var(--vb-purple);
+    }
+    .nav-item.active {
+      background: rgba(111,66,193,0.1);
+      color: var(--vb-purple);
+      font-weight: 600;
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 6px; bottom: 6px;
+      width: 3px;
+      background: var(--vb-grad-btn);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--vb-grad-btn);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .sidebar-user {
+      padding: 14px 16px;
+      border-top: 1px solid #eaecf4;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--vb-grad-main);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.85rem; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-info .uname { font-size: 0.82rem; font-weight: 600; color: #1a1d2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info .urole { font-size: 0.7rem; color: #9097a5; }
+    .user-cog { color: #b0b7c8; cursor: pointer; font-size: 0.85rem; transition: color 0.2s; }
+    .user-cog:hover { color: var(--vb-purple); }
+
+    /* ══════════════════════════════════════════════════
+       TOP BAR
+    ══════════════════════════════════════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0; left: var(--sidebar-w); right: 0;
+      height: var(--topbar-h);
+      background: #fff;
+      border-bottom: 1px solid #eaecf4;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .topbar-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #1a1d2e;
+      flex: 1;
+    }
+    .topbar-title span { color: #b0b7c8; font-weight: 400; }
+
+    .topbar-search {
+      position: relative;
+    }
+    .topbar-search input {
+      background: #f4f5fb;
+      border: 1.5px solid #e8eaf0;
+      border-radius: 10px;
+      padding: 8px 14px 8px 36px;
+      font-size: 0.83rem;
+      color: #1a1d2e;
+      width: 220px;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.25s;
+    }
+    .topbar-search input:focus {
+      border-color: var(--vb-purple);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(111,66,193,0.1);
+      width: 260px;
+    }
+    .topbar-search i {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: #b0b7c8; font-size: 0.82rem;
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .topbar-icon-btn {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      border: 1.5px solid #e8eaf0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #6b7490;
+      font-size: 0.9rem;
+      transition: all 0.22s;
+      position: relative;
+    }
+    .topbar-icon-btn:hover { border-color: var(--vb-purple); color: var(--vb-purple); background: rgba(111,66,193,0.04); }
+    .notif-dot {
+      width: 8px; height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      position: absolute;
+      top: 5px; right: 5px;
+      border: 2px solid #fff;
+    }
+
+    /* ══════════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════════ */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      padding-top: var(--topbar-h);
+      min-height: 100vh;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .page-body {
+      padding: 28px 32px;
+      flex: 1;
+    }
+
+    /* ══════════════════════════════════════════════════
+       PAGE HEADER
+    ══════════════════════════════════════════════════ */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-header h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      margin: 0;
+    }
+    .page-header p {
+      font-size: 0.88rem;
+      color: #8a909e;
+      margin: 2px 0 0;
+    }
+
+    .btn-vb-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      background: var(--vb-grad-btn);
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 18px rgba(111,66,193,0.3);
+      letter-spacing: 0.2px;
+      text-decoration: none;
+    }
+    .btn-vb-primary:hover {
+      background: var(--vb-grad-btn-h);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(111,66,193,0.4);
+      color: #fff;
+    }
+    .btn-vb-primary:active { transform: translateY(0); }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--vb-purple);
+      border: 1.5px solid rgba(111,66,193,0.35);
+      border-radius: 11px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+    .btn-outline:hover {
+      background: rgba(111,66,193,0.06);
+      border-color: var(--vb-purple);
+    }
+
+    /* ══════════════════════════════════════════════════
+       STATS STRIP
+    ══════════════════════════════════════════════════ */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      border: 1px solid #eaecf4;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: box-shadow 0.25s;
+    }
+    .stat-card:hover { box-shadow: var(--vb-shadow); }
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.purple  { background: rgba(111,66,193,0.1); color: var(--vb-purple); }
+    .stat-icon.blue    { background: rgba(13,110,253,0.1);  color: var(--vb-blue); }
+    .stat-icon.teal    { background: rgba(32,201,151,0.1);  color: var(--vb-teal); }
+    .stat-icon.orange  { background: rgba(253,126,20,0.1);  color: var(--vb-orange); }
+    .stat-num {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 0.76rem;
+      color: #9097a5;
+      margin-top: 3px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       FILTERS / TABS
+    ══════════════════════════════════════════════════ */
+    .rfq-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-tabs {
+      display: flex;
+      background: #fff;
+      border: 1.5px solid #e8eaf0;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .filter-tab {
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #9097a5;
+      cursor: pointer;
+      transition: all 0.22s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .filter-tab.active {
+      background: var(--vb-grad-btn);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(111,66,193,0.28);
+    }
+    .filter-tab:hover:not(.active) { color: var(--vb-purple); }
+
+    .toolbar-spacer { flex: 1; }
+
+    .sort-select {
+      background: #fff;
+      border: 1.5px solid #e8eaf0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      color: #4a5068;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.22s;
+    }
+    .sort-select:focus { border-color: var(--vb-purple); }
+
+    /* ══════════════════════════════════════════════════
+       RFQ TABLE
+    ══════════════════════════════════════════════════ */
+    .rfq-table-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #eaecf4;
+      overflow: hidden;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 12px rgba(111,66,193,0.06);
+    }
+    .rfq-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .rfq-table thead th {
+      background: #fafbfe;
+      padding: 13px 18px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #9097a5;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid #eaecf4;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    .rfq-table thead th:hover { color: var(--vb-purple); }
+    .rfq-table thead th i { margin-left: 4px; opacity: 0.5; font-size: 0.68rem; }
+    .rfq-table tbody tr {
+      border-bottom: 1px solid #f0f2f7;
+      transition: background 0.18s;
+    }
+    .rfq-table tbody tr:last-child { border-bottom: none; }
+    .rfq-table tbody tr:hover { background: rgba(111,66,193,0.025); }
+    .rfq-table tbody td {
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: #4a5068;
+      vertical-align: middle;
+    }
+
+    .rfq-id {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      color: var(--vb-purple);
+      font-size: 0.82rem;
+    }
+    .rfq-title-cell .title { font-weight: 600; color: #1a1d2e; font-size: 0.88rem; }
+    .rfq-title-cell .vendor { font-size: 0.75rem; color: #9097a5; margin-top: 2px; }
+
+    /* Status badges */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .badge-status.draft       { background: #f4f5fb; color: #9097a5; }
+    .badge-status.draft::before { background: #c4c9d6; }
+    .badge-status.pending     { background: rgba(253,126,20,0.1);   color: var(--vb-orange); }
+    .badge-status.pending::before { background: var(--vb-orange); }
+    .badge-status.sent        { background: rgba(13,110,253,0.1);  color: var(--vb-blue); }
+    .badge-status.sent::before { background: var(--vb-blue); }
+    .badge-status.quoted      { background: rgba(32,201,151,0.1);  color: var(--vb-teal); }
+    .badge-status.quoted::before { background: var(--vb-teal); }
+    .badge-status.closed      { background: rgba(111,66,193,0.1);  color: var(--vb-purple); }
+    .badge-status.closed::before { background: var(--vb-purple); }
+    .badge-status.expired     { background: rgba(239,68,68,0.1);   color: #ef4444; }
+    .badge-status.expired::before { background: #ef4444; }
+
+    /* Priority badges */
+    .badge-priority {
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .badge-priority.high   { background: rgba(239,68,68,0.1);  color: #ef4444; }
+    .badge-priority.medium { background: rgba(253,126,20,0.1); color: var(--vb-orange); }
+    .badge-priority.low    { background: rgba(32,201,151,0.1); color: var(--vb-teal); }
+
+    .row-actions { display: flex; gap: 6px; }
+    .row-btn {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      border: 1.5px solid #e8eaf0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #9097a5;
+      font-size: 0.78rem;
+      transition: all 0.22s;
+    }
+    .row-btn:hover { border-color: var(--vb-purple); color: var(--vb-purple); background: rgba(111,66,193,0.04); }
+    .row-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.04); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .empty-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(111,66,193,0.08);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      color: var(--vb-purple);
+      margin-bottom: 16px;
+    }
+    .empty-state h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a1d2e;
+      margin-bottom: 6px;
+    }
+    .empty-state p { font-size: 0.85rem; color: #9097a5; margin-bottom: 20px; }
+
+    /* ══════════════════════════════════════════════════
+       PAGINATION
+    ══════════════════════════════════════════════════ */
+    .pagination-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid #eaecf4;
+      background: #fafbfe;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pag-info { font-size: 0.8rem; color: #9097a5; }
+    .pag-btns { display: flex; gap: 4px; }
+    .pag-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1.5px solid #e8eaf0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7490;
+      transition: all 0.22s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .pag-btn:hover, .pag-btn.active {
+      background: var(--vb-grad-btn);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 3px 8px rgba(111,66,193,0.3);
+    }
+
+    /* ══════════════════════════════════════════════════
+       CREATE RFQ MODAL / DRAWER
+    ══════════════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,15,30,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; animation: fadeInUp 0.3s ease; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .rfq-modal {
+      background: #fff;
+      border-radius: 20px;
+      width: 92%;
+      max-width: 680px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: var(--vb-shadow-lg);
+      position: relative;
+      animation: fadeInUp 0.35s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 26px 18px;
+      border-bottom: 1px solid #eaecf4;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+      border-radius: 20px 20px 0 0;
+    }
+    .modal-header-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(111,66,193,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--vb-purple);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .modal-header h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #1a1d2e;
+      margin: 0;
+    }
+    .modal-header p { font-size: 0.8rem; color: #9097a5; margin: 2px 0 0; }
+    .modal-close-btn {
+      margin-left: auto;
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1.5px solid #e8eaf0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #9097a5;
+      font-size: 0.9rem;
+      transition: all 0.22s;
+    }
+    .modal-close-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Stepper */
+    .rfq-stepper {
+      display: flex;
+      align-items: center;
+      padding: 20px 26px 0;
+      gap: 0;
+    }
+    .step-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 0;
+    }
+    .step-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #e8eaf0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700;
+      color: #9097a5;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.35s;
+      flex-shrink: 0;
+    }
+    .step-circle.active  { background: var(--vb-grad-btn); color: #fff; box-shadow: 0 3px 12px rgba(111,66,193,0.35); }
+    .step-circle.done    { background: var(--vb-teal); color: #fff; }
+    .step-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      color: #c4c9d6;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      white-space: nowrap;
+      transition: color 0.3s;
+    }
+    .step-label.active { color: var(--vb-purple); }
+    .step-label.done   { color: var(--vb-teal); }
+    .step-connector {
+      flex: 1;
+      height: 3px;
+      background: #e8eaf0;
+      border-radius: 2px;
+      margin-bottom: 20px;
+      transition: background 0.4s;
+    }
+    .step-connector.done { background: var(--vb-teal); }
+
+    /* Modal body */
+    .modal-body {
+      padding: 22px 26px 26px;
+    }
+
+    .step-content { display: none; }
+    .step-content.active { display: block; animation: fadeInUp 0.28s ease; }
+
+    /* form fields inside modal */
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #4a5068;
+      margin-bottom: 6px;
+      display: block;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .field-group label .req { color: #ef4444; margin-left: 2px; }
+    .input-wrap { position: relative; }
+    .input-wrap .field-icon {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: #b0b7c8; font-size: 0.85rem; pointer-events: none; transition: color 0.25s;
+    }
+    .input-wrap input,
+    .input-wrap select,
+    .input-wrap textarea {
+      width: 100%;
+      padding: 10px 13px 10px 38px;
+      border: 1.5px solid #e3e6ef;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d2e;
+      background: #fafbfe;
+      transition: all 0.25s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-wrap textarea { padding-top: 12px; min-height: 80px; resize: vertical; }
+    .input-wrap input:focus,
+    .input-wrap select:focus,
+    .input-wrap textarea:focus {
+      border-color: var(--vb-purple);
+      background: #fff;
+      box-shadow: 0 0 0 3.5px rgba(111,66,193,0.1);
+    }
+    .input-wrap:focus-within .field-icon { color: var(--vb-purple); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+    /* Items table inside modal */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .items-table thead th {
+      background: #fafbfe;
+      padding: 9px 12px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: #9097a5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid #eaecf4;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .items-table tbody td {
+      border: 1px solid #eaecf4;
+      padding: 8px 10px;
+    }
+    .items-table tbody td input,
+    .items-table tbody td select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 0.84rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1d2e;
+      outline: none;
+    }
+    .items-table tbody tr:hover { background: #fafbfe; }
+
+    .add-row-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      border: 1.5px dashed rgba(111,66,193,0.4);
+      border-radius: 8px;
+      background: rgba(111,66,193,0.04);
+      color: var(--vb-purple);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.22s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .add-row-btn:hover { background: rgba(111,66,193,0.1); border-color: var(--vb-purple); }
+
+    /* Vendor select chips */
+    .vendor-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .vendor-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(111,66,193,0.08);
+      border: 1.5px solid rgba(111,66,193,0.2);
+      border-radius: 20px;
+      padding: 4px 12px 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--vb-purple);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .vendor-chip .remove-chip {
+      cursor: pointer; font-size: 0.65rem; opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .vendor-chip .remove-chip:hover { opacity: 1; }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed #d4d8e8;
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: #fafbfe;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--vb-purple);
+      background: rgba(111,66,193,0.04);
+    }
+    .drop-zone i { font-size: 1.8rem; color: #c4c9d6; margin-bottom: 8px; display: block; }
+    .drop-zone p { font-size: 0.82rem; color: #9097a5; margin: 0; }
+    .drop-zone strong { color: var(--vb-purple); }
+    .drop-zone input[type="file"] { display: none; }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 26px 22px;
+      gap: 10px;
+    }
+    .modal-footer-right { display: flex; gap: 10px; }
+
+    /* Alert inside modal */
+    .vb-alert {
+      border-radius: 10px; padding: 10px 14px; font-size: 0.83rem;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+      animation: fadeInUp 0.3s ease;
+    }
+    .vb-alert.success { background: #ecfdf5; color: #166534; border: 1px solid #bbf7d0; }
+    .vb-alert.error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .vb-alert.info    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* ══════════════════════════════════════════════════
+       VIEW DETAIL DRAWER
+    ══════════════════════════════════════════════════ */
+    .detail-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,15,30,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 8000;
+    }
+    .detail-overlay.open { display: block; }
+    .detail-drawer {
+      position: fixed;
+      top: 0; right: -520px; bottom: 0;
+      width: 480px;
+      background: #fff;
+      box-shadow: -8px 0 40px rgba(111,66,193,0.15);
+      z-index: 8100;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .detail-overlay.open .detail-drawer { right: 0; }
+    .detail-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 20px 22px;
+      border-bottom: 1px solid #eaecf4;
+    }
+    .detail-header h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem; font-weight: 800; color: #1a1d2e; margin: 0; flex: 1;
+    }
+    .detail-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+    .detail-section { margin-bottom: 22px; }
+    .detail-section h4 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: #b0b7c8; margin-bottom: 12px;
+    }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-item label { font-size: 0.72rem; color: #9097a5; display: block; margin-bottom: 2px; font-weight: 500; }
+    .detail-item span { font-size: 0.85rem; font-weight: 600; color: #1a1d2e; }
+    .detail-footer {
+      padding: 16px 22px;
+      border-top: 1px solid #eaecf4;
+      display: flex; gap: 10px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.mobile-open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .topbar { left: 0; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 640px) {
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+      .field-row, .field-row-3 { grid-template-columns: 1fr; }
+      .page-body { padding: 18px 16px; }
+      .rfq-modal { width: 98%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-icon"><i class="fas fa-link"></i></div>
+    <div class="logo-text">Vendor<span>Bridge</span></div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+
+    <!-- Navigation links – update hrefs to point to your teammates' files -->
+    <a href="vendorbridge-dashboard.html" class="nav-item" id="nav-dashboard">
+      <i class="fas fa-gauge-high"></i> Dashboard
+    </a>
+    <a href="vendorbridge-vendors.html" class="nav-item" id="nav-vendors">
+      <i class="fas fa-store"></i> Vendors
+    </a>
+    <a href="vendorbridge-rfq.html" class="nav-item active" id="nav-rfq">
+      <i class="fas fa-file-invoice"></i> RFQ's
+      <span class="nav-badge">8</span>
+    </a>
+    <a href="vendorbridge-quotations.html" class="nav-item" id="nav-quotations">
+      <i class="fas fa-file-circle-check"></i> Quotations
+      <span class="nav-badge">12</span>
+    </a>
+    <a href="vendorbridge-quotation-compare.html" class="nav-item" id="nav-compare">
+      <i class="fas fa-scale-balanced"></i> Compare Quotes
+    </a>
+    <a href="vendorbridge-approvals.html" class="nav-item" id="nav-approvals">
+      <i class="fas fa-check-double"></i> Approvals
+      <span class="nav-badge" style="background:#ef4444;">3</span>
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">Procurement</div>
+    <a href="vendorbridge-purchase-orders-invoices.html" class="nav-item" id="nav-po">
+      <i class="fas fa-cart-flatbed"></i> Purchase Orders and invoices
+    </a>
+  
+    <a href="vendorbridge-reports.html" class="nav-item" id="nav-rep">
+      <i class="fas fa-chart-bar"></i> Reports
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">System</div>
+    <a href="vendorbridge-activity.html" class="nav-item" id="nav-act">
+      <i class="fas fa-bolt"></i> Activity
+    </a>
+    <a href="#" class="nav-item" id="nav-settings">
+      <i class="fas fa-gear"></i> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">PS</div>
+    <div class="user-info">
+      <div class="uname">Procurement User</div>
+      <div class="urole">Procurement Officer</div>
+    </div>
+    <i class="fas fa-right-from-bracket user-cog" title="Logout" onclick="window.location.href='vendorbridge-auth.html'"></i>
+  </div>
+</aside>
+
+<!-- ════════════════ TOP BAR ════════════════ -->
+<header class="topbar">
+  <!-- Mobile hamburger -->
+  <button id="hamburger-btn" style="display:none;background:none;border:none;font-size:1.2rem;color:#6b7490;cursor:pointer;margin-right:8px;" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="topbar-title">
+    RFQ's &nbsp;<span>/ Requests for Quotation</span>
+  </div>
+
+  <div class="topbar-search">
+    <i class="fas fa-search"></i>
+    <input type="text" id="search-rfq" placeholder="Search RFQ's…" oninput="filterRFQs(this.value)"/>
+  </div>
+
+  <div class="topbar-actions">
+    <div class="topbar-icon-btn" title="Notifications" onclick="showToast('3 pending approvals require attention.','info')">
+      <i class="fas fa-bell"></i>
+      <span class="notif-dot"></span>
+    </div>
+    <div class="topbar-icon-btn" title="Help">
+      <i class="fas fa-circle-question"></i>
+    </div>
+    <!-- Back to auth (useful for demo linking) -->
+    <a href="vendorbridge-auth.html" class="topbar-icon-btn" title="Sign Out">
+      <i class="fas fa-right-from-bracket"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<main class="main-content">
+  <div class="page-body">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>Requests for Quotation</h1>
+        <p>Manage and track all RFQ's sent to vendors</p>
+      </div>
+      <button class="btn-vb-primary" id="btn-create-rfq" onclick="openCreateModal()">
+        <i class="fas fa-plus"></i> Create New RFQ
+      </button>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-file-invoice"></i></div>
+        <div>
+          <div class="stat-num" id="stat-total">24</div>
+          <div class="stat-lbl">Total RFQ's</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
+        <div>
+          <div class="stat-num" id="stat-pending">8</div>
+          <div class="stat-lbl">Pending Response</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon teal"><i class="fas fa-circle-check"></i></div>
+        <div>
+          <div class="stat-num" id="stat-quoted">11</div>
+          <div class="stat-lbl">Quotes Received</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-xmark-circle"></i></div>
+        <div>
+          <div class="stat-num" id="stat-expired">5</div>
+          <div class="stat-lbl">Expired / Closed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="rfq-toolbar">
+      <div class="filter-tabs" id="filter-tabs">
+        <div class="filter-tab active" data-filter="all"    onclick="setFilter('all',this)">All</div>
+        <div class="filter-tab" data-filter="draft"         onclick="setFilter('draft',this)">Draft</div>
+        <div class="filter-tab" data-filter="sent"          onclick="setFilter('sent',this)">Sent</div>
+        <div class="filter-tab" data-filter="quoted"        onclick="setFilter('quoted',this)">Quoted</div>
+        <div class="filter-tab" data-filter="pending"       onclick="setFilter('pending',this)">Pending</div>
+        <div class="filter-tab" data-filter="closed"        onclick="setFilter('closed',this)">Closed</div>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <select class="sort-select" id="sort-select" onchange="sortRFQs(this.value)">
+        <option value="date-desc">Newest First</option>
+        <option value="date-asc">Oldest First</option>
+        <option value="priority">By Priority</option>
+        <option value="status">By Status</option>
+      </select>
+    </div>
+
+    <!-- Alert box -->
+    <div id="page-alert-box"></div>
+
+    <!-- RFQ Table -->
+    <div class="rfq-table-card">
+      <table class="rfq-table" id="rfq-table">
+        <thead>
+          <tr>
+            <th onclick="sortByCol('id')">RFQ # <i class="fas fa-sort"></i></th>
+            <th onclick="sortByCol('title')">Title / Items <i class="fas fa-sort"></i></th>
+            <th onclick="sortByCol('category')">Category <i class="fas fa-sort"></i></th>
+            <th onclick="sortByCol('deadline')">Deadline <i class="fas fa-sort"></i></th>
+            <th onclick="sortByCol('priority')">Priority <i class="fas fa-sort"></i></th>
+            <th onclick="sortByCol('status')">Status <i class="fas fa-sort"></i></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rfq-tbody"></tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="empty-icon"><i class="fas fa-file-circle-question"></i></div>
+        <h3>No RFQ's found</h3>
+        <p>No requests match your current filter. Try adjusting the filter or create a new RFQ.</p>
+        <button class="btn-vb-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> Create RFQ</button>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-row" id="pagination-row">
+        <span class="pag-info" id="pag-info">Showing 1–8 of 24 results</span>
+        <div class="pag-btns">
+          <div class="pag-btn" onclick="changePage(-1)"><i class="fas fa-chevron-left"></i></div>
+          <div class="pag-btn active" id="pag-1" onclick="jumpPage(1)">1</div>
+          <div class="pag-btn" id="pag-2" onclick="jumpPage(2)">2</div>
+          <div class="pag-btn" id="pag-3" onclick="jumpPage(3)">3</div>
+          <div class="pag-btn" onclick="changePage(1)"><i class="fas fa-chevron-right"></i></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</main>
+
+<!-- ════════════════ CREATE RFQ MODAL ════════════════ -->
+<div class="modal-overlay" id="create-rfq-modal">
+  <div class="rfq-modal">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-header-icon"><i class="fas fa-file-invoice"></i></div>
+      <div>
+        <h2>Create RFQ</h2>
+        <p>New request for quotation</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeCreateModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Stepper -->
+    <div class="rfq-stepper">
+      <div class="step-node">
+        <div class="step-circle active" id="sc-1">1</div>
+        <div class="step-label active" id="sl-1">RFQ Details</div>
+      </div>
+      <div class="step-connector" id="conn-1"></div>
+      <div class="step-node">
+        <div class="step-circle" id="sc-2">2</div>
+        <div class="step-label" id="sl-2">Items</div>
+      </div>
+      <div class="step-connector" id="conn-2"></div>
+      <div class="step-node">
+        <div class="step-circle" id="sc-3">3</div>
+        <div class="step-label" id="sl-3">Vendors & Docs</div>
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="modal-alert" style="padding: 0 26px;"></div>
+
+    <!-- Step 1 – RFQ Details -->
+    <div class="modal-body">
+      <div class="step-content active" id="step-1">
+        <div class="field-group">
+          <label>RFQ Title <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input type="text" id="rfq-title" placeholder="e.g. Office Furniture for 3rd Floor"/>
+            <i class="fas fa-file-signature field-icon"></i>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Category <span class="req">*</span></label>
+            <div class="input-wrap">
+              <select id="rfq-category">
+                <option value="">Select category</option>
+                <option>Furniture</option>
+                <option>IT Equipment</option>
+                <option>Stationery</option>
+                <option>Construction</option>
+                <option>Logistics</option>
+                <option>Services</option>
+                <option>Raw Materials</option>
+                <option>Other</option>
+              </select>
+              <i class="fas fa-tag field-icon"></i>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Priority</label>
+            <div class="input-wrap">
+              <select id="rfq-priority">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+              <i class="fas fa-flag field-icon"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Deadline <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="date" id="rfq-deadline"/>
+              <i class="fas fa-calendar-days field-icon"></i>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Budget Estimate (₹)</label>
+            <div class="input-wrap">
+              <input type="number" id="rfq-budget" placeholder="0.00" min="0"/>
+              <i class="fas fa-indian-rupee-sign field-icon"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Description / Specifications</label>
+          <div class="input-wrap">
+            <textarea id="rfq-description" placeholder="Describe your requirements, quality standards, delivery terms…"></textarea>
+            <i class="fas fa-align-left field-icon" style="top:14px;transform:none;"></i>
+          </div>
+        </div>
+      </div><!-- /step-1 -->
+
+      <!-- Step 2 – Items -->
+      <div class="step-content" id="step-2">
+        <p style="font-size:0.83rem;color:#9097a5;margin-bottom:14px;">Add the items / products you require quotations for.</p>
+        <table class="items-table" id="items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="items-tbody">
+            <!-- rows added by JS -->
+          </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addItemRow()">
+          <i class="fas fa-plus"></i> Add Line Item
+        </button>
+      </div><!-- /step-2 -->
+
+      <!-- Step 3 – Vendors & Docs -->
+      <div class="step-content" id="step-3">
+        <div class="field-group">
+          <label>Select Vendors <span class="req">*</span></label>
+          <div class="vendor-chips" id="selected-vendors-chips"></div>
+          <div class="input-wrap">
+            <select id="vendor-selector" onchange="addVendorChip(this)">
+              <option value="">+ Add vendor…</option>
+              <option value="Infra Supplies Pvt Ltd">Infra Supplies Pvt Ltd</option>
+              <option value="Timberon LTD">Timberon LTD</option>
+              <option value="CraftingTransport">CraftingTransport</option>
+              <option value="TechStar Solutions">TechStar Solutions</option>
+              <option value="Global Print Works">Global Print Works</option>
+              <option value="Alpha Interiors">Alpha Interiors</option>
+              <option value="Delta Logistics">Delta Logistics</option>
+            </select>
+            <i class="fas fa-store field-icon"></i>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-top:18px;">
+          <label>Attachments</label>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleDrop(event)">
+            <i class="fas fa-cloud-arrow-up"></i>
+            <p>Drag &amp; drop files or <strong>click to upload</strong></p>
+            <p style="font-size:0.74rem;margin-top:4px;color:#c4c9d6;">PDF, DOCX, XLSX, PNG – max 10 MB each</p>
+            <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg" onchange="handleFileSelect(this)"/>
+          </div>
+          <div id="file-list" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="field-group" style="margin-top:10px;">
+          <label>Additional Notes to Vendors</label>
+          <div class="input-wrap">
+            <textarea id="rfq-notes" placeholder="Any special instructions or terms for vendors…"></textarea>
+            <i class="fas fa-sticky-note field-icon" style="top:14px;transform:none;"></i>
+          </div>
+        </div>
+      </div><!-- /step-3 -->
+    </div><!-- /modal-body -->
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn-outline" id="btn-back" onclick="prevStep()" style="display:none;">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <div class="modal-footer-right">
+        <button class="btn-outline" onclick="saveDraft()">
+          <i class="fas fa-floppy-disk"></i> Save as Draft
+        </button>
+        <button class="btn-vb-primary" id="btn-next" onclick="nextStep()">
+          Next <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /rfq-modal -->
+</div><!-- /create-rfq-modal -->
+
+<!-- ════════════════ VIEW DETAIL DRAWER ════════════════ -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetailDrawer(event)">
+  <div class="detail-drawer" id="detail-drawer">
+    <div class="detail-header">
+      <button class="modal-close-btn" onclick="closeDetailDrawerBtn()"><i class="fas fa-times"></i></button>
+      <h3 id="drawer-rfq-id">RFQ-001</h3>
+      <span class="badge-status" id="drawer-status">sent</span>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h4>RFQ Information</h4>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Title</label>
+            <span id="d-title">–</span>
+          </div>
+          <div class="detail-item">
+            <label>Category</label>
+            <span id="d-category">–</span>
+          </div>
+          <div class="detail-item">
+            <label>Priority</label>
+            <span id="d-priority">–</span>
+          </div>
+          <div class="detail-item">
+            <label>Deadline</label>
+            <span id="d-deadline">–</span>
+          </div>
+          <div class="detail-item">
+            <label>Budget</label>
+            <span id="d-budget">–</span>
+          </div>
+          <div class="detail-item">
+            <label>Created</label>
+            <span id="d-created">–</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <h4>Description</h4>
+        <p id="d-desc" style="font-size:0.85rem;color:#4a5068;line-height:1.6;">–</p>
+      </div>
+      <div class="detail-section">
+        <h4>Vendors Notified</h4>
+        <div id="d-vendors" class="vendor-chips" style="margin:0;"></div>
+      </div>
+    </div>
+    <div class="detail-footer">
+      <button class="btn-vb-primary" style="flex:1;" onclick="showToast('RFQ sent to vendors successfully!','success')">
+        <i class="fas fa-paper-plane"></i> Send to Vendors
+      </button>
+      <button class="btn-outline" onclick="showToast('RFQ closed.','info')">
+        <i class="fas fa-archive"></i> Close RFQ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TOAST ════════════════ -->
+<div id="toast-container" style="position:fixed;bottom:26px;right:26px;z-index:99999;display:flex;flex-direction:column;gap:10px;"></div>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  /* ─────────────────────────────────────────────────────
+     DATA – Mock RFQ records
+  ───────────────────────────────────────────────────── */
+  const RFQS = [
+    { id:'RFQ-024', title:'Standing Desks – 2nd Floor Expansion', vendor:'Infra Supplies Pvt Ltd, Timberon LTD', category:'Furniture', deadline:'2026-06-18', priority:'high',   status:'sent',    budget:'₹4,20,000', created:'2026-06-01', desc:'Ergonomic standing desks and chairs for 30 new workstations on 2nd floor.' },
+    { id:'RFQ-023', title:'Laptop Refresh Q3 2026',               vendor:'TechStar Solutions',                  category:'IT Equipment', deadline:'2026-06-25', priority:'high',   status:'pending', budget:'₹18,50,000', created:'2026-05-30', desc:'Replacement laptops (Core i7, 16GB RAM, 512GB SSD) for 40 employees.' },
+    { id:'RFQ-022', title:'Stationery & Office Supplies',         vendor:'Global Print Works',                  category:'Stationery',   deadline:'2026-06-20', priority:'low',    status:'quoted',  budget:'₹85,000',   created:'2026-05-28', desc:'Monthly stationery replenishment – A4 paper, pens, folders, etc.' },
+    { id:'RFQ-021', title:'Data Centre Cabling & Rack Setup',     vendor:'Alpha Interiors',                     category:'Construction', deadline:'2026-07-05', priority:'medium', status:'draft',   budget:'₹9,60,000', created:'2026-05-25', desc:'Structured cabling and rack installation for the new data centre room.' },
+    { id:'RFQ-020', title:'Annual Logistics Contract 2026-27',    vendor:'Delta Logistics, CraftingTransport',  category:'Logistics',    deadline:'2026-06-10', priority:'high',   status:'expired', budget:'₹32,00,000', created:'2026-05-20', desc:'Transporting finished goods across 4 states; volume ~500 MT/month.' },
+    { id:'RFQ-019', title:'Air Conditioning – Server Room',       vendor:'Infra Supplies Pvt Ltd',              category:'Construction', deadline:'2026-07-01', priority:'medium', status:'quoted',  budget:'₹7,50,000', created:'2026-05-18', desc:'Precision cooling units for server room, 5-ton capacity each.' },
+    { id:'RFQ-018', title:'Marketing Collateral Print Q2',        vendor:'Global Print Works',                  category:'Services',     deadline:'2026-05-30', priority:'low',    status:'closed',  budget:'₹1,20,000', created:'2026-05-10', desc:'Brochures, standees, and banners for the Q2 marketing campaign.' },
+    { id:'RFQ-017', title:'Raw Material – Steel Rods (Grade FE550)', vendor:'CraftingTransport',               category:'Raw Materials', deadline:'2026-06-28', priority:'high',   status:'sent',    budget:'₹55,00,000', created:'2026-05-08', desc:'50 MT of Fe550 grade TMT steel rods for civil construction project.' },
+  ];
+
+  let currentFilter = 'all';
+  let currentPage   = 1;
+  const perPage     = 8;
+  let sortedData    = [...RFQS];
+  let searchTerm    = '';
+  let currentStep   = 1;
+  let selectedVendors = [];
+  let itemRowCount  = 0;
+
+  /* ─── Render Table ──────────────────────────────── */
+  function renderTable() {
+    let data = RFQS.filter(r => {
+      const matchFilter = currentFilter === 'all' || r.status === currentFilter;
+      const matchSearch = !searchTerm ||
+        r.id.toLowerCase().includes(searchTerm) ||
+        r.title.toLowerCase().includes(searchTerm) ||
+        r.vendor.toLowerCase().includes(searchTerm) ||
+        r.category.toLowerCase().includes(searchTerm);
+      return matchFilter && matchSearch;
+    });
+
+    // sort
+    data = [...data]; // copy
+    const sv = document.getElementById('sort-select').value;
+    if (sv === 'date-asc')   data.sort((a,b) => a.id.localeCompare(b.id));
+    if (sv === 'date-desc')  data.sort((a,b) => b.id.localeCompare(a.id));
+    if (sv === 'priority')   { const o={high:0,medium:1,low:2}; data.sort((a,b)=>o[a.priority]-o[b.priority]); }
+    if (sv === 'status')     data.sort((a,b) => a.status.localeCompare(b.status));
+
+    const total  = data.length;
+    const start  = (currentPage-1)*perPage;
+    const slice  = data.slice(start, start+perPage);
+    const tbody  = document.getElementById('rfq-tbody');
+    const empty  = document.getElementById('empty-state');
+    const pagRow = document.getElementById('pagination-row');
+
+    tbody.innerHTML = '';
+
+    if (!slice.length) {
+      empty.style.display = 'block';
+      pagRow.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    pagRow.style.display = 'flex';
+
+    slice.forEach(r => {
+      const pClass = { high:'high', medium:'medium', low:'low' }[r.priority] || 'medium';
+      const pLabel = r.priority.charAt(0).toUpperCase()+r.priority.slice(1);
+      const dl     = r.deadline ? new Date(r.deadline).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '–';
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="rfq-id">${r.id}</span></td>
+          <td>
+            <div class="rfq-title-cell">
+              <div class="title">${r.title}</div>
+              <div class="vendor"><i class="fas fa-store" style="font-size:0.7rem;margin-right:4px;"></i>${r.vendor}</div>
+            </div>
+          </td>
+          <td>${r.category}</td>
+          <td>${dl}</td>
+          <td><span class="badge-priority ${pClass}">${pLabel}</span></td>
+          <td><span class="badge-status ${r.status}">${capitalize(r.status)}</span></td>
+          <td>
+            <div class="row-actions">
+              <div class="row-btn" title="View Details" onclick='openDetailDrawer(${JSON.stringify(r)})'><i class="fas fa-eye"></i></div>
+              <div class="row-btn" title="Edit" onclick="showToast('Edit RFQ coming soon!','info')"><i class="fas fa-pen"></i></div>
+              <div class="row-btn danger" title="Delete" onclick="deleteRFQ('${r.id}')"><i class="fas fa-trash-can"></i></div>
+            </div>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById('pag-info').textContent =
+      `Showing ${start+1}–${Math.min(start+slice.length,total)} of ${total} results`;
+
+    // update page buttons
+    const totalPages = Math.ceil(total/perPage);
+    [1,2,3].forEach(n => {
+      const b = document.getElementById('pag-'+n);
+      if (!b) return;
+      b.style.display = n <= totalPages ? 'flex' : 'none';
+      b.classList.toggle('active', n === currentPage);
+    });
+  }
+
+  function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  /* ─── Filters ───────────────────────────────────── */
+  function setFilter(f, el) {
+    currentFilter = f;
+    currentPage   = 1;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTable();
+  }
+
+  function filterRFQs(v) {
+    searchTerm  = v.toLowerCase().trim();
+    currentPage = 1;
+    renderTable();
+  }
+
+  function sortRFQs() {
+    currentPage = 1;
+    renderTable();
+  }
+
+  function sortByCol() { renderTable(); }
+
+  /* ─── Pagination ────────────────────────────────── */
+  function changePage(dir) {
+    const total = RFQS.length;
+    const tp    = Math.ceil(total/perPage);
+    currentPage = Math.max(1, Math.min(tp, currentPage+dir));
+    renderTable();
+  }
+  function jumpPage(n) { currentPage = n; renderTable(); }
+
+  /* ─── Delete ────────────────────────────────────── */
+  function deleteRFQ(id) {
+    const idx = RFQS.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      RFQS.splice(idx,1);
+      renderTable();
+      showToast(`RFQ ${id} deleted.`, 'error');
+    }
+  }
+
+  /* ─── CREATE MODAL ──────────────────────────────── */
+  function openCreateModal() {
+    document.getElementById('create-rfq-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    resetCreateModal();
+  }
+  function closeCreateModal() {
+    document.getElementById('create-rfq-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('create-rfq-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('create-rfq-modal')) closeCreateModal();
+  });
+
+  function resetCreateModal() {
+    currentStep = 1;
+    selectedVendors = [];
+    itemRowCount = 0;
+    ['rfq-title','rfq-description','rfq-notes','rfq-budget'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('rfq-category').value = '';
+    document.getElementById('rfq-priority').value  = 'medium';
+    document.getElementById('rfq-deadline').value  = '';
+    document.getElementById('items-tbody').innerHTML = '';
+    document.getElementById('selected-vendors-chips').innerHTML = '';
+    document.getElementById('file-list').innerHTML  = '';
+    document.getElementById('vendor-selector').value = '';
+    document.getElementById('modal-alert').innerHTML = '';
+    addItemRow(); addItemRow(); // seed 2 rows
+    updateStepUI();
+  }
+
+  /* Stepper logic */
+  function updateStepUI() {
+    [1,2,3].forEach(n => {
+      const sc = document.getElementById('sc-'+n);
+      const sl = document.getElementById('sl-'+n);
+      const content = document.getElementById('step-'+n);
+      const done = n < currentStep;
+      const active = n === currentStep;
+      sc.className = 'step-circle' + (active?' active':'') + (done?' done':'');
+      sl.className = 'step-label' + (active?' active':'') + (done?' done':'');
+      if (content) content.className = 'step-content' + (active?' active':'');
+      if (n < 3) {
+        const conn = document.getElementById('conn-'+n);
+        conn.className = 'step-connector' + (n < currentStep?' done':'');
+      }
+    });
+    document.getElementById('btn-back').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+    const btnNext = document.getElementById('btn-next');
+    if (currentStep === 3) {
+      btnNext.innerHTML = '<i class="fas fa-paper-plane"></i> Save & Send to Vendors';
+    } else {
+      btnNext.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
+    }
+  }
+
+  function nextStep() {
+    clearModalAlert();
+    if (currentStep === 1) {
+      if (!validateStep1()) return;
+      currentStep = 2;
+      updateStepUI();
+    } else if (currentStep === 2) {
+      currentStep = 3;
+      updateStepUI();
+    } else if (currentStep === 3) {
+      submitRFQ();
+    }
+  }
+
+  function prevStep() {
+    clearModalAlert();
+    if (currentStep > 1) { currentStep--; updateStepUI(); }
+  }
+
+  function validateStep1() {
+    const title    = document.getElementById('rfq-title').value.trim();
+    const category = document.getElementById('rfq-category').value;
+    const deadline = document.getElementById('rfq-deadline').value;
+    if (!title)    { showModalAlert('Please enter an RFQ title.','error'); return false; }
+    if (!category) { showModalAlert('Please select a category.','error');  return false; }
+    if (!deadline) { showModalAlert('Please set a deadline.','error');     return false; }
+    return true;
+  }
+
+  function saveDraft() {
+    const title = document.getElementById('rfq-title').value.trim() || 'Untitled RFQ';
+    const newRFQ = {
+      id: 'RFQ-0' + String(Date.now()).slice(-3),
+      title, vendor: '–', category: document.getElementById('rfq-category').value || 'Other',
+      deadline: document.getElementById('rfq-deadline').value || '–',
+      priority: document.getElementById('rfq-priority').value,
+      status: 'draft',
+      budget: document.getElementById('rfq-budget').value ? '₹'+Number(document.getElementById('rfq-budget').value).toLocaleString('en-IN') : '–',
+      created: new Date().toISOString().slice(0,10),
+      desc: document.getElementById('rfq-description').value || '–'
+    };
+    RFQS.unshift(newRFQ);
+    renderTable();
+    closeCreateModal();
+    showToast(`Draft saved: "${title}"`, 'info');
+  }
+
+  function submitRFQ() {
+    if (!selectedVendors.length) {
+      showModalAlert('Please add at least one vendor.','error'); return;
+    }
+    const title = document.getElementById('rfq-title').value.trim();
+    const newRFQ = {
+      id: 'RFQ-0' + String(Date.now()).slice(-3),
+      title,
+      vendor: selectedVendors.join(', '),
+      category: document.getElementById('rfq-category').value,
+      deadline: document.getElementById('rfq-deadline').value,
+      priority: document.getElementById('rfq-priority').value,
+      status: 'sent',
+      budget: document.getElementById('rfq-budget').value ? '₹'+Number(document.getElementById('rfq-budget').value).toLocaleString('en-IN') : '–',
+      created: new Date().toISOString().slice(0,10),
+      desc: document.getElementById('rfq-description').value || '–'
+    };
+    RFQS.unshift(newRFQ);
+    renderTable();
+    closeCreateModal();
+    showToast(`🎉 RFQ "${title}" sent to ${selectedVendors.length} vendor(s)!`, 'success');
+  }
+
+  /* Modal alert */
+  function showModalAlert(msg, type='error') {
+    const icons = { error:'fa-circle-exclamation', success:'fa-circle-check', info:'fa-circle-info' };
+    document.getElementById('modal-alert').innerHTML =
+      `<div class="vb-alert ${type}"><i class="fas ${icons[type]}"></i>${msg}</div>`;
+  }
+  function clearModalAlert() { document.getElementById('modal-alert').innerHTML = ''; }
+
+  /* ─── Items Table ───────────────────────────────── */
+  function addItemRow() {
+    itemRowCount++;
+    const n = itemRowCount;
+    document.getElementById('items-tbody').insertAdjacentHTML('beforeend',`
+      <tr id="item-row-${n}">
+        <td style="color:#9097a5;font-size:0.8rem;text-align:center;width:30px;">${n}</td>
+        <td><input type="text" placeholder="Item name" id="item-name-${n}"/></td>
+        <td>
+          <select id="item-cat-${n}" style="width:100%;border:none;background:transparent;font-size:0.83rem;font-family:'DM Sans',sans-serif;color:#1a1d2e;outline:none;">
+            <option>Furniture</option><option>IT Equipment</option><option>Stationery</option>
+            <option>Construction</option><option>Logistics</option><option>Services</option><option>Other</option>
+          </select>
+        </td>
+        <td><input type="number" placeholder="1" min="1" id="item-qty-${n}" style="width:60px;"/></td>
+        <td>
+          <select id="item-unit-${n}" style="width:100%;border:none;background:transparent;font-size:0.83rem;font-family:'DM Sans',sans-serif;color:#1a1d2e;outline:none;">
+            <option>Nos</option><option>KG</option><option>MT</option><option>Ltr</option><option>Box</option><option>Set</option>
+          </select>
+        </td>
+        <td style="text-align:center;">
+          <span style="cursor:pointer;color:#ef4444;font-size:0.8rem;" onclick="removeItemRow(${n})" title="Remove">
+            <i class="fas fa-trash-can"></i>
+          </span>
+        </td>
+      </tr>`);
+  }
+
+  function removeItemRow(n) {
+    const row = document.getElementById('item-row-'+n);
+    if (row) row.remove();
+  }
+
+  /* ─── Vendor Chips ──────────────────────────────── */
+  function addVendorChip(sel) {
+    const val = sel.value;
+    if (!val) return;
+    if (selectedVendors.includes(val)) { sel.value=''; return; }
+    selectedVendors.push(val);
+    sel.value = '';
+    renderVendorChips();
+  }
+
+  function removeVendorChip(v) {
+    selectedVendors = selectedVendors.filter(x => x !== v);
+    renderVendorChips();
+  }
+
+  function renderVendorChips() {
+    const c = document.getElementById('selected-vendors-chips');
+    c.innerHTML = selectedVendors.map(v =>
+      `<div class="vendor-chip">${v} <span class="remove-chip" onclick="removeVendorChip('${v}')"><i class="fas fa-times"></i></span></div>`
+    ).join('');
+  }
+
+  /* ─── File Upload ───────────────────────────────── */
+  function handleFileSelect(input) {
+    renderFiles(Array.from(input.files));
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    renderFiles(Array.from(e.dataTransfer.files));
+  }
+
+  function renderFiles(files) {
+    const list = document.getElementById('file-list');
+    files.forEach(f => {
+      const div = document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fafbfe;border:1px solid #eaecf4;border-radius:8px;margin-bottom:6px;font-size:0.8rem;color:#4a5068;';
+      div.innerHTML = `<i class="fas fa-paperclip" style="color:var(--vb-purple);"></i>${f.name} <span style="color:#c4c9d6;margin-left:4px;">(${(f.size/1024).toFixed(0)} KB)</span>
+        <span style="margin-left:auto;cursor:pointer;color:#ef4444;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>`;
+      list.appendChild(div);
+    });
+  }
+
+  /* ─── Detail Drawer ─────────────────────────────── */
+  function openDetailDrawer(r) {
+    document.getElementById('drawer-rfq-id').textContent = r.id;
+    const badge = document.getElementById('drawer-status');
+    badge.className = 'badge-status ' + r.status;
+    badge.textContent = capitalize(r.status);
+    document.getElementById('d-title').textContent    = r.title;
+    document.getElementById('d-category').textContent = r.category;
+    document.getElementById('d-priority').textContent = capitalize(r.priority);
+    document.getElementById('d-deadline').textContent = r.deadline ? new Date(r.deadline).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '–';
+    document.getElementById('d-budget').textContent   = r.budget || '–';
+    document.getElementById('d-created').textContent  = r.created ? new Date(r.created).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '–';
+    document.getElementById('d-desc').textContent     = r.desc || 'No description provided.';
+    const vends = r.vendor.split(',').map(v=>v.trim()).filter(Boolean);
+    document.getElementById('d-vendors').innerHTML = vends.map(v=>`<div class="vendor-chip">${v}</div>`).join('');
+    document.getElementById('detail-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetailDrawer(e) {
+    if (e.target === document.getElementById('detail-overlay')) closeDetailDrawerBtn();
+  }
+  function closeDetailDrawerBtn() {
+    document.getElementById('detail-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  /* ─── Toast Notification ────────────────────────── */
+  function showToast(msg, type='success') {
+    const icons = { success:'fa-circle-check', error:'fa-circle-exclamation', info:'fa-circle-info' };
+    const colors = { success:'#22c55e', error:'#ef4444', info:'var(--vb-blue)' };
+    const t = document.createElement('div');
+    t.style.cssText=`background:#fff;border:1px solid #eaecf4;border-radius:12px;padding:12px 16px;
+      display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+      font-size:0.84rem;color:#1a1d2e;min-width:260px;max-width:360px;
+      animation:fadeInUp 0.3s ease;font-family:'DM Sans',sans-serif;`;
+    t.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:1rem;flex-shrink:0;"></i>
+      <span style="flex:1;">${msg}</span>
+      <span style="cursor:pointer;color:#b0b7c8;font-size:0.8rem;" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(()=>t.remove(),400); }, 4000);
+  }
+
+  /* ─── Mobile Sidebar Toggle ─────────────────────── */
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+  }
+
+  /* ─── Responsive hamburger show/hide ────────────── */
+  function handleResize() {
+    const hb = document.getElementById('hamburger-btn');
+    if (window.innerWidth <= 900) { hb.style.display='block'; }
+    else { hb.style.display='none'; document.getElementById('sidebar').classList.remove('mobile-open'); }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+
+  /* ─── Page Alert ────────────────────────────────── */
+  function showPageAlert(msg, type='success') {
+    const icons = { error:'fa-circle-exclamation', success:'fa-circle-check', info:'fa-circle-info' };
+    document.getElementById('page-alert-box').innerHTML =
+      `<div class="vb-alert ${type}" style="margin-bottom:16px;"><i class="fas ${icons[type]}"></i>${msg}</div>`;
+    setTimeout(()=>{ document.getElementById('page-alert-box').innerHTML=''; }, 4000);
+  }
+
+  /* ─── Init ──────────────────────────────────────── */
+  renderTable();
+</script>
+</body>
+</html>

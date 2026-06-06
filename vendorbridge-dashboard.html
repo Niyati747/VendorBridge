@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendorsBridge - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --nexus-purple: #6f42c1;
+            --nexus-blue: #0d6efd;
+            --nexus-teal: #20c997;
+            --nexus-orange: #fd7e14;
+            --nexus-pink: #d63384;
+            --nexus-indigo: #6610f2;
+        }
+        
+        body {
+            background: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+            min-height: 100vh;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.08);
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .nav-link {
+            color: #6c757d !important;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 2px 0;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background: linear-gradient(45deg, var(--nexus-purple), var(--nexus-blue));
+            color: white !important;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(45deg, var(--nexus-teal), var(--nexus-blue));
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(32, 201, 151, 0.3);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            border: 1px solid #f1f3f4;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+        }
+        
+        .stat-card-1 { border-left: 4px solid var(--nexus-purple); }
+        .stat-card-2 { border-left: 4px solid var(--nexus-teal); }
+        .stat-card-3 { border-left: 4px solid var(--nexus-orange); }
+        .stat-card-4 { border-left: 4px solid var(--nexus-pink); }
+        
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--nexus-light-green);
+        }
+        
+        .activity-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .event-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, var(--nexus-purple), var(--nexus-blue), var(--nexus-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-nexus {
+            background: linear-gradient(45deg, var(--nexus-purple), var(--nexus-blue));
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-nexus:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(111, 66, 193, 0.4);
+            color: white;
+            background: linear-gradient(45deg, var(--nexus-indigo), var(--nexus-purple));
+        }
+        
+        .counter {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--nexus-purple), var(--nexus-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(111, 66, 193, 0.05) 0%, rgba(13, 110, 253, 0.05) 50%, rgba(32, 201, 151, 0.05) 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(111, 66, 193, 0.1);
+        }
+        
+        .activity-item {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid transparent;
+        }
+        
+        .activity-item:hover {
+            background: linear-gradient(135deg, rgba(111, 66, 193, 0.08) 0%, rgba(32, 201, 151, 0.08) 100%);
+            transform: translateX(10px);
+            border: 1px solid rgba(111, 66, 193, 0.2);
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(90deg, var(--nexus-purple), var(--nexus-blue), var(--nexus-teal)); box-shadow: 0 2px 20px rgba(111, 66, 193, 0.2);">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);" class="p-2 rounded me-3">
+                    <i class="fas fa-graduation-cap text-white fs-4"></i>
+                </div>
+                <span class="navbar-brand text-white mb-0 h1" style="font-weight: 600;">VendorsBridge</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link text-white me-3" style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 40px; height: 40px;">
+                    <i class="fas fa-bell fs-5"></i>
+                </button>
+                <svg width="40" height="40" class="rounded-circle" style="border: 2px solid rgba(255,255,255,0.3);">
+                    <defs>
+                        <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fd7e14;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#d63384;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="40" height="40" fill="url(#avatarGrad)" rx="20"/>
+                    <circle cx="20" cy="15" r="6" fill="white"/>
+                    <path d="M8 32 Q20 25 32 32" stroke="white" stroke-width="2" fill="none"/>
+                </svg>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="vendorbridge-dashboard.html">
+                                    <i class="fas fa-home me-2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-vendors.html">
+                                    <i class="fas fa-users me-2"></i> Vendors
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-rfq.html">
+                                    <i class="fas fa-calendar me-2"></i> RFQ'S
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-quotations.html">
+                                    <i class="fas fa-briefcase me-2"></i> Quotations
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-quotation-compare.html">
+                                    <i class="fas fa-scale-balanced me-2"></i> Compare Quotes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-approvals.html">
+                                    <i class="fas fa-comments me-2"></i> Approvals
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-purchase-orders-invoices.html">
+                                    <i class="fas fa-donate me-2"></i> Purchase Orders
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-purchase-orders-invoices.html">
+                                    <i class="fas fa-briefcase me-2"></i> Invoices
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-reports.html">
+                                    <i class="fas fa-briefcase me-2"></i> Reports
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="vendorbridge-activity.html">
+                                    <i class="fas fa-briefcase me-2"></i> Activity
+                                </a>
+                            </li>
+                             
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="p-4">
+                    <!-- Hero Section -->
+                    <div class="hero-section">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="gradient-text mb-2">Welcome back, Procurement Officer</h2>
+                                <p class="text-muted mb-0">Today's Overview.</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <svg width="120" height="80" viewBox="0 0 120 80">
+                                    <defs>
+                                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#198754;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#20c997;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <rect x="10" y="20" width="15" height="40" fill="url(#grad1)" rx="2"/>
+                                    <rect x="30" y="15" width="15" height="45" fill="url(#grad1)" rx="2"/>
+                                    <rect x="50" y="10" width="15" height="50" fill="url(#grad1)" rx="2"/>
+                                    <rect x="70" y="25" width="15" height="35" fill="url(#grad1)" rx="2"/>
+                                    <rect x="90" y="5" width="15" height="55" fill="url(#grad1)" rx="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="stat-card stat-card-1 p-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted small mb-1">Active RFQ'S</p>
+                                        <div class="counter" data-target="25">0</div>
+                                    </div>
+                                    <div style="background: linear-gradient(45deg, var(--nexus-purple), var(--nexus-indigo)); opacity: 0.1;" class="p-3 rounded-circle position-relative">
+                                        <i class="fas fa-users fs-4 position-absolute top-50 start-50 translate-middle" style="color: var(--nexus-purple);"></i>
+                                    </div>
+                                </div>
+                                <div class="ps-2 mt-2" style="border-left: 3px solid var(--nexus-purple);">
+                                    <small style="color: var(--nexus-purple);">+12% from last month</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="stat-card stat-card-2 p-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted small mb-1">Pending Approvals</p>
+                                        <div class="counter" data-target="15">0</div>
+                                    </div>
+                                    <div style="background: linear-gradient(45deg, var(--nexus-teal), var(--nexus-blue)); opacity: 0.1;" class="p-3 rounded-circle position-relative">
+                                        <i class="fas fa-user-check fs-4 position-absolute top-50 start-50 translate-middle" style="color: var(--nexus-teal);"></i>
+                                    </div>
+                                </div>
+                                <div class="ps-2 mt-2" style="border-left: 3px solid var(--nexus-teal);">
+                                    <small style="color: var(--nexus-teal);">-8% from last month</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="stat-card stat-card-3 p-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted small mb-1">PO'S This month</p>
+                                        <div class="counter" data-target="2300000">0</div>
+                                    </div>
+                                    <div style="background: linear-gradient(45deg, var(--nexus-orange), #ffc107); opacity: 0.1;" class="p-3 rounded-circle position-relative">
+                                        <i class="fas fa-calendar-alt fs-4 position-absolute top-50 start-50 translate-middle" style="color: var(--nexus-orange);"></i>
+                                    </div>
+                                </div>
+                                <div class="ps-2 mt-2" style="border-left: 3px solid var(--nexus-orange);">
+                                    <small style="color: var(--nexus-orange);">3 this week</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="stat-card stat-card-4 p-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted small mb-1">Overdue Invoices</p>
+                                        <div class="counter" data-target="5">0</div>
+                                    </div>
+                                    <div style="background: linear-gradient(45deg, var(--nexus-pink), #e91e63); opacity: 0.1;" class="p-3 rounded-circle position-relative">
+                                        <i class="fas fa-briefcase fs-4 position-absolute top-50 start-50 translate-middle" style="color: var(--nexus-pink);"></i>
+                                    </div>
+                                </div>
+                                <div class="ps-2 mt-2" style="border-left: 3px solid var(--nexus-pink);">
+                                    <small style="color: var(--nexus-pink);">5 new this week</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="row">
+                        <!-- Recent Activity -->
+                        <div class="col-lg-8 mb-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <h5 class="gradient-text mb-0">Recent Activity</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="activity-item mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <svg class="activity-img me-3" width="40" height="40">
+                                                <defs>
+                                                    <linearGradient id="userGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                        <stop offset="0%" style="stop-color:#6f42c1;stop-opacity:1" />
+                                                        <stop offset="100%" style="stop-color:#d63384;stop-opacity:1" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <circle cx="20" cy="20" r="20" fill="url(#userGrad)"/>
+                                                <circle cx="20" cy="15" r="5" fill="white"/>
+                                                <path d="M10 30 Q20 25 30 30" stroke="white" stroke-width="2" fill="none"/>
+                                            </svg>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">Sarah Johnson joined the network</h6>
+                                                <p class="text-muted small mb-1">Class of 2018 • Computer Science</p>
+                                                <small style="color: var(--nexus-purple);">2 hours ago</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="activity-item mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <svg class="activity-img me-3" width="40" height="40">
+                                                <defs>
+                                                    <linearGradient id="eventGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                        <stop offset="0%" style="stop-color:#20c997;stop-opacity:1" />
+                                                        <stop offset="100%" style="stop-color:#0d6efd;stop-opacity:1" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <circle cx="20" cy="20" r="20" fill="url(#eventGrad2)"/>
+                                                <rect x="12" y="12" width="16" height="12" fill="white" rx="2"/>
+                                                <rect x="14" y="16" width="4" height="1" fill="#20c997"/>
+                                                <rect x="14" y="18" width="6" height="1" fill="#20c997"/>
+                                                <rect x="14" y="20" width="8" height="1" fill="#20c997"/>
+                                            </svg>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">Annual Reunion 2024 event created</h6>
+                                                <p class="text-muted small mb-1">June 15, 2024 • Main Campus</p>
+                                                <small style="color: var(--nexus-teal);">5 hours ago</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="activity-item">
+                                        <div class="d-flex align-items-start">
+                                            <svg class="activity-img me-3" width="40" height="40">
+                                                <defs>
+                                                    <linearGradient id="jobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                        <stop offset="0%" style="stop-color:#fd7e14;stop-opacity:1" />
+                                                        <stop offset="100%" style="stop-color:#6610f2;stop-opacity:1" />
+                                                    </linearGradient>
+                                                </defs>
+                                                <circle cx="20" cy="20" r="20" fill="url(#jobGrad)"/>
+                                                <rect x="12" y="14" width="16" height="10" fill="white" rx="1"/>
+                                                <rect x="14" y="16" width="3" height="2" fill="#fd7e14"/>
+                                                <rect x="18" y="16" width="8" height="1" fill="#fd7e14"/>
+                                                <rect x="18" y="18" width="6" height="1" fill="#fd7e14"/>
+                                                <rect x="14" y="20" width="10" height="1" fill="#fd7e14"/>
+                                            </svg>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">New job posting: Senior Developer</h6>
+                                                <p class="text-muted small mb-1">TechCorp Inc. • Remote</p>
+                                                <small style="color: var(--nexus-orange);">1 day ago</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions & Events -->
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <h5 class="gradient-text mb-0">Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-nexus">
+                                            <i class="fas fa-plus me-2"></i>+New RFQ'S
+                                        </button>
+                                        <button class="btn" style="border: 2px solid var(--nexus-teal); color: var(--nexus-teal); font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='var(--nexus-teal)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--nexus-teal)';">
+                                            <i class="fas fa-search me-2"></i>ADD VENDOR
+                                        </button>
+                                        <button class="btn" style="border: 2px solid var(--nexus-orange); color: var(--nexus-orange); font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='var(--nexus-orange)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--nexus-orange)';">
+                                            <i class="fas fa-edit me-2"></i>VIEW Invoices
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Events -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <h5 class="gradient-text mb-0">Upcoming Events</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <svg class="event-img" width="100%" height="120" viewBox="0 0 300 120">
+                                            <defs>
+                                                <linearGradient id="eventGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" style="stop-color:#198754;stop-opacity:0.8" />
+                                                    <stop offset="100%" style="stop-color:#20c997;stop-opacity:0.8" />
+                                                </linearGradient>
+                                            </defs>
+                                            <rect width="300" height="120" fill="url(#eventGrad)" rx="10"/>
+                                            <circle cx="60" cy="40" r="15" fill="white" opacity="0.9"/>
+                                            <rect x="45" y="50" width="30" height="20" fill="white" opacity="0.9" rx="5"/>
+                                            <text x="150" y="40" fill="white" font-size="16" font-weight="bold">Tech Meetup</text>
+                                            <text x="150" y="60" fill="white" font-size="12">March 15, 2024</text>
+                                            <text x="150" y="80" fill="white" font-size="10">Innovation Hub</text>
+                                        </svg>
+                                        <div class="mt-2">
+                                            <h6 class="mb-1">Tech Meetup 2024</h6>
+                                            <small class="text-muted">March 15, 2024 • Innovation Hub</small>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <svg class="event-img" width="100%" height="120" viewBox="0 0 300 120">
+                                            <rect width="300" height="120" fill="url(#eventGrad)" rx="10"/>
+                                            <rect x="40" y="30" width="40" height="30" fill="white" opacity="0.9" rx="5"/>
+                                            <circle cx="100" cy="45" r="8" fill="white" opacity="0.9"/>
+                                            <circle cx="120" cy="45" r="8" fill="white" opacity="0.9"/>
+                                            <text x="150" y="40" fill="white" font-size="16" font-weight="bold">Career Fair</text>
+                                            <text x="150" y="60" fill="white" font-size="12">March 22, 2024</text>
+                                            <text x="150" y="80" fill="white" font-size="10">Main Campus</text>
+                                        </svg>
+                                        <div class="mt-2">
+                                            <h6 class="mb-1">Career Fair 2024</h6>
+                                            <small class="text-muted">March 22, 2024 • Main Campus</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Counter animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const counters = document.querySelectorAll('.counter');
+            
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                let current = 0;
+                const increment = target / 50;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target.toLocaleString();
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current).toLocaleString();
+                    }
+                }, 30);
+            });
+
+            // Activity item hover effects
+            const activityItems = document.querySelectorAll('.activity-item');
+            activityItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(10px)';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9796c3d9256b836f',t:'MTc1NjkxODQyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
