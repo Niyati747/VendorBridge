@@ -1,2 +1,2 @@
 # VendorBridge
-it is an ERP system 
+it is an ERP system.
